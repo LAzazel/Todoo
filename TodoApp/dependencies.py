@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal
+from passlib.context import CryptContext
 
 
 def get_db():
@@ -12,4 +13,5 @@ def get_db():
         db.close()
 
 
-db_dependency = Annotated[Session, Depends(get_db)]
+db_dependency: type[Session] = Annotated[Session, Depends(get_db)]
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

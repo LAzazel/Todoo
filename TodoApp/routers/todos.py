@@ -1,13 +1,16 @@
-from fastapi import Depends, HTTPException, Path, APIRouter
-from typing import Annotated
+from fastapi import HTTPException, Path, APIRouter, Depends
 from pydantic import BaseModel, Field
 from starlette import status
 from models import Todos
-from .auth import get_current_user
 from dependencies import db_dependency
+from typing import Annotated
+from .auth import get_current_user
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/todos",
+    tags=["todos"]
+)
 
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
@@ -30,31 +33,48 @@ class TodoRequest(BaseModel):
         }
     }
 
+
+def get_todo_by_id_and_owner(db: db_dependency, todo_id: int, owner_id: int):
+    return db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == owner_id).first()
+
+
 @router.get("/", status_code=status.HTTP_200_OK)
-async def read_all(db: db_dependency):
-    return db.query(Todos).all()
+async def read_all(user: user_dependency, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+    return db.query(Todos).filter(Todos.owner_id == user.get("id")).all()
 
 
-@router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
-async def read_todo( db: db_dependency, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
-    if todo_model:
+@router.get("/{todo_id}", status_code=status.HTTP_200_OK)
+async def read_todo(user:user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+    todo_model = get_todo_by_id_and_owner(db, todo_id, user.get('id'))
+    if todo_model is not None:
         return todo_model
     raise HTTPException(status_code=404, detail="Todo not found")
 
 
-@router.post("/todo", status_code=status.HTTP_201_CREATED)
-async def create_todo(todo_request: TodoRequest, db: db_dependency):
-    todo_model = Todos(**todo_request.model_dump())
+@router.post("/create_todo", status_code=status.HTTP_201_CREATED)
+async def create_todo(user: user_dependency,todo_request: TodoRequest, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    todo_model = Todos(**todo_request.model_dump(), owner_id=user.get("id"))
 
     db.add(todo_model)
     db.commit()
 
 
-@router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo( db: db_dependency, todo_request: TodoRequest, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
-    if not todo_model:
+@router.put("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def update_todo(user: user_dependency, db: db_dependency,
+                      todo_request: TodoRequest,
+                      todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    todo_model = get_todo_by_id_and_owner(db, todo_id, user.get('id'))
+    if todo_model is None:
         raise HTTPException(status_code=404, detail="Todo not found")
 
     todo_model.title = todo_request.title
@@ -66,11 +86,14 @@ async def update_todo( db: db_dependency, todo_request: TodoRequest, todo_id: in
     db.commit()
 
 
-@router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo( db: db_dependency, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
-    if not todo_model:
+@router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    todo_model = get_todo_by_id_and_owner(db, todo_id, user.get('id'))
+    if todo_model is None:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    db.query(Todos).filter(Todos.id == todo_id).delete()
+    db.delete(todo_model)
     db.commit()
