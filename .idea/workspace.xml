@@ -4,7 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12f5126c-a9fd-425b-81cd-abb1a8d7d6f5" name="Changes" comment="" />
+    <list default="true" id="12f5126c-a9fd-425b-81cd-abb1a8d7d6f5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/fastApiProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/fastApiProject.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoApp/.venv/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/TodoApp/.venv/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoApp/dependencies.py" beforeDir="false" afterPath="$PROJECT_DIR$/TodoApp/dependencies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/TodoApp/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoApp/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/TodoApp/routers/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoApp/routers/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/TodoApp/routers/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoApp/todos_app.db" beforeDir="false" afterPath="$PROJECT_DIR$/TodoApp/todos_app.db" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,6 +31,21 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;LAzazel&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/LAzazel/test_fastapi_project&quot;,
+    &quot;accountId&quot;: &quot;f1ef8f57-aa77-42fa-a35d-d8f8aae6ef74&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
@@ -103,10 +128,20 @@
       <workItem from="1759528270518" duration="49000" />
       <workItem from="1759957875407" duration="64000" />
       <workItem from="1760208278595" duration="61000" />
+      <workItem from="1762556020020" duration="5031000" />
+      <workItem from="1762968805916" duration="99000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
   </component>
 </project>
