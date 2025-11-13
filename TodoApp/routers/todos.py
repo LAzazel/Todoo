@@ -1,8 +1,8 @@
 from fastapi import HTTPException, Path, APIRouter, Depends
 from pydantic import BaseModel, Field
 from starlette import status
-from models import Todos
-from dependencies import db_dependency
+from ..models import Todos
+from ..dependencies import db_dependency
 from typing import Annotated
 from .auth import get_current_user
 

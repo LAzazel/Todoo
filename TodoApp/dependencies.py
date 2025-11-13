@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from database import SessionLocal
+from .database import SessionLocal
 from passlib.context import CryptContext
 
 
