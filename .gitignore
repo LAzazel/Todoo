@@ -1,0 +1,13 @@
+# Virtual environment
+.venv/
+
+# Local secrets
+TodoApp/secret.py
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+

@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime, timezone
-from typing import Annotated
+from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette import status
@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from ..dependencies import db_dependency, bcrypt_context
-from ..secret import SECRET_KEY, ALGORITHM
+from ..secret import SECRET_KEY, ALGORITHM, SECRET_KEY_PREVIOUS
 
 router = APIRouter(
     prefix="/auth",
@@ -43,28 +43,35 @@ def authenticate_user(db: Session, username: str, password: str):
 
 
 def create_access_token(user_name: str, user_id: int, role:str, expires_delta:timedelta):
-    encode = {"sub": user_name, "id": user_id, "role": role}
+    encode: dict[str, Any] = {"sub": user_name, "id": user_id, "role": role}
     expires = datetime.now(timezone.utc) + expires_delta
-    encode.update({'exp': expires})
+    encode.update({'exp': int(expires.timestamp())})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        user_id: int = payload.get("id")
-        user_role: str = payload.get("role")
-        if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-        return {"username": username, "id": user_id, "role": user_role}
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+    keys_to_try = [SECRET_KEY]
+    if SECRET_KEY_PREVIOUS:
+        keys_to_try.append(SECRET_KEY_PREVIOUS)
+
+    for key in keys_to_try:
+        try:
+            payload = jwt.decode(token, key, algorithms=[ALGORITHM])
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+            user_role: str = payload.get("role")
+            if username is None or user_id is None:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+            return {"username": username, "id": user_id, "role": user_role}
+        except JWTError:
+            continue
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: CreateUserRequest):
     create_user_model = Users(
-        email=create_user_request.email,
+        email=str(create_user_request.email),
         username=create_user_request.username,
         first_name=create_user_request.first_name,
         last_name=create_user_request.last_name,

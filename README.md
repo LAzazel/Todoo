@@ -13,6 +13,16 @@ python -m pip install --upgrade pip
 python -m pip install fastapi uvicorn sqlalchemy alembic passlib[bcrypt] python-jose[cryptography] python-multipart pydantic email-validator pytest
 ```
 
+## Environment
+
+Create local env file from template and set your own secret:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Set `SECRET_KEY` in `.env` to a long random value.
+
 ## Run API
 
 Use package path from the root folder:
@@ -60,4 +70,3 @@ Use this instead from root:
 ```powershell
 python -m uvicorn TodoApp.main:app --reload
 ```
-
