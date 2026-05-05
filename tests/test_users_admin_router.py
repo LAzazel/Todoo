@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from starlette import status
 
 
-def test_admin_read_all_todos_returns_403_for_non_admin(client, set_current_user):
+def test_admin_read_todos_forbidden(client, set_current_user):
     set_current_user({"id": 1, "username": "john", "role": "user"})
 
     response = client.get("/admin/todo")
@@ -12,7 +12,7 @@ def test_admin_read_all_todos_returns_403_for_non_admin(client, set_current_user
     assert response.json()["detail"] == "Not enough permissions"
 
 
-def test_change_password_returns_404_when_user_not_found(client, mock_db, set_current_user):
+def test_change_password_user_not_found(client, mock_db, set_current_user):
     set_current_user({"id": 1, "username": "john", "role": "user"})
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -22,7 +22,7 @@ def test_change_password_returns_404_when_user_not_found(client, mock_db, set_cu
     assert response.json()["detail"] == "User not found"
 
 
-def test_change_phone_number_updates_value_and_returns_204(client, mock_db, set_current_user):
+def test_change_phone_number_success(client, mock_db, set_current_user):
     set_current_user({"id": 1, "username": "john", "role": "user"})
     user_model = SimpleNamespace(phone_number="1111111111", hashed_password="old")
     mock_db.query.return_value.filter.return_value.first.return_value = user_model

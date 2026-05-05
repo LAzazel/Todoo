@@ -10,7 +10,7 @@ from app.auth import authenticate_user, create_access_token, get_current_user
 from app.config import SECRET_KEY, ALGORITHM
 
 
-def test_authenticate_user_returns_user_when_credentials_are_valid():
+def test_authenticate_user_success():
     db = MagicMock()
     user = MagicMock()
     user.hashed_password = bcrypt_context.hash("secret123")
@@ -21,7 +21,7 @@ def test_authenticate_user_returns_user_when_credentials_are_valid():
     assert result == user
 
 
-def test_authenticate_user_returns_false_when_password_is_invalid():
+def test_authenticate_user_invalid_password():
     db = MagicMock()
     user = MagicMock()
     user.hashed_password = bcrypt_context.hash("secret123")
@@ -32,7 +32,7 @@ def test_authenticate_user_returns_false_when_password_is_invalid():
     assert result is False
 
 
-def test_create_access_token_contains_expected_claims():
+def test_create_access_token_claims():
     token = create_access_token("john", 7, "admin", timedelta(minutes=5))
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
@@ -42,7 +42,7 @@ def test_create_access_token_contains_expected_claims():
     assert "exp" in payload
 
 
-def test_get_current_user_raises_for_invalid_token():
+def test_get_current_user_invalid_token():
     with pytest.raises(HTTPException) as exc:
         get_current_user("not-a-real-token")
 
