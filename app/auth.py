@@ -3,12 +3,12 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette import status
-from ..models import Users
+from .models import Users
 from pydantic import BaseModel, EmailStr
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
-from ..dependencies import db_dependency, bcrypt_context
-from ..secret import SECRET_KEY, ALGORITHM, SECRET_KEY_PREVIOUS
+from .dependencies import db_dependency, bcrypt_context
+from .config import SECRET_KEY, ALGORITHM, SECRET_KEY_PREVIOUS
 
 router = APIRouter(
     prefix="/auth",

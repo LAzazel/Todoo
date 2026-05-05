@@ -5,9 +5,9 @@ import pytest
 from jose import jwt
 from fastapi import HTTPException
 
-from ..dependencies import bcrypt_context
-from ..routers.auth import authenticate_user, create_access_token, get_current_user
-from ..secret import SECRET_KEY, ALGORITHM
+from app.dependencies import bcrypt_context
+from app.auth import authenticate_user, create_access_token, get_current_user
+from app.config import SECRET_KEY, ALGORITHM
 
 
 def test_authenticate_user_returns_user_when_credentials_are_valid():
