@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="com.obiscr.chatgpt.settings.EasyCodeState">
-    <option name="projectFiles" value="$PROJECT_DIR$/routers/__init__.py;C:/Users/User/OneDrive/Рабочий стол/fastApiProject/TodoApp/routers/auth.py;C:/Users/User/OneDrive/Рабочий стол/fastApiProject/TodoApp/routers/todos.py;C:/Users/User/OneDrive/Рабочий стол/fastApiProject/TodoApp/__init__.py;C:/Users/User/OneDrive/Рабочий стол/fastApiProject/TodoApp/database.py;C:/Users/User/OneDrive/Рабочий стол/fastApiProject/TodoApp/main.py;C:/Users/User/OneDrive/Рабочий стол/fastApiProject/TodoApp/models.py" />
-  </component>
-</project>
