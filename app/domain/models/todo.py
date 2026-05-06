@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 from app.domain.value_objects.priority import Priority
-from app.domain.errors import ValidationError
+from app.domain.errors import DomainValidationError
 
 
 @dataclass
@@ -15,9 +15,9 @@ class Todo:
 
     def __post_init__(self):
         if not self.title.strip():
-            raise ValidationError("Todo title cannot be empty")
+            raise DomainValidationError("Todo title cannot be empty")
         if self.owner_id <= 0:
-            raise ValidationError("Invalid owner ID")
+            raise DomainValidationError("Invalid owner ID")
 
 
     def mark_as_completed(self) -> None:
@@ -28,7 +28,7 @@ class Todo:
 
     def update_details(self, title: str, description: str, priority: Priority) -> None:
         if not title.strip():
-            raise ValidationError("Todo title cannot be empty")
+            raise DomainValidationError("Todo title cannot be empty")
         self.title = title
         self.description = description
         self.priority = priority

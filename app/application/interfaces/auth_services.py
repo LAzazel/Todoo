@@ -9,3 +9,6 @@ class IPasswordHasher(ABC):
 class ITokenService(ABC):
     @abstractmethod
     def generate_token(self, user_id: int, role: str) -> str: pass
+
+    @abstractmethod
+    def decode_token(self, token: str) -> dict: pass

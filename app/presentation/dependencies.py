@@ -1,7 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+
+from app.application.interfaces.auth_services import ITokenService
+from app.domain.errors import InvalidCredentialsError
 
 from app.infrastructure.database import get_db
 from app.infrastructure.repositories.user_repo import SQLAlchemyUserRepository
@@ -106,22 +108,28 @@ def get_change_phone_number_use_case(user_repo = Depends(get_user_repo)):
     return ChangePhoneNumberUseCase(user_repo)
 
 
-def get_current_user_id(token: str = Depends(oauth2_scheme)) -> int:
+def get_current_user_id(
+    token: str = Depends(oauth2_scheme),
+    token_service: ITokenService = Depends(get_token_service)
+) -> int:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
+        payload = token_service.decode_token(token)
+        user_id = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+            raise HTTPException(status_code=401, detail="Invalid token")
         return int(user_id)
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except InvalidCredentialsError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
-def get_current_user_role(token: str = Depends(oauth2_scheme)) -> str:
+def get_current_user_role(
+    token: str = Depends(oauth2_scheme),
+    token_service: ITokenService = Depends(get_token_service)
+) -> str:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        role: str = payload.get("role")
+        payload = token_service.decode_token(token)
+        role = payload.get("role")
         if role is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+            raise HTTPException(status_code=401, detail="Invalid token")
         return role
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except InvalidCredentialsError:
+        raise HTTPException(status_code=401, detail="Invalid token")

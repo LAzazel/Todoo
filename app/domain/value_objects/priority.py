@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from app.domain.errors import ValidationError
+from app.domain.errors import DomainValidationError
 
 @dataclass(frozen=True)
 class Priority:
@@ -7,7 +7,7 @@ class Priority:
 
     def __post_init__(self):
         if not isinstance(self.value, int):
-            raise ValidationError("Priority must be an integer")
+            raise DomainValidationError("Priority must be an integer")
         
         if self.value < 1 or self.value > 5:
-            raise ValidationError(f"Priority must be between 1 and 5, got {self.value}")
+            raise DomainValidationError(f"Priority must be between 1 and 5, got {self.value}")

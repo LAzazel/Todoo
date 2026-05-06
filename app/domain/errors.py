@@ -1,7 +1,7 @@
 class DomainError(Exception):
     pass
 
-class ValidationError(DomainError):
+class DomainValidationError(DomainError):
     pass
 
 class UserAlreadyExistsError(DomainError):

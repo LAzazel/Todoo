@@ -19,7 +19,7 @@ class RegisterUserUseCase:
         
         user = self.user_factory.create_user(
             username=dto.username,
-            email_str=dto.email,
+            email=dto.email,
             first_name=dto.first_name,
             last_name=dto.last_name,
             hashed_password=hashed_password,
