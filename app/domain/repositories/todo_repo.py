@@ -13,5 +13,17 @@ class ITodoRepository(ABC):
         pass
 
     @abstractmethod
+    def get_all(self) -> List[Todo]:
+        pass
+
+    @abstractmethod
     def add(self, todo: Todo) -> None:
+        pass
+
+    @abstractmethod
+    def update(self, todo: Todo) -> None:
+        pass
+
+    @abstractmethod
+    def delete(self, todo: Todo) -> None:
         pass
