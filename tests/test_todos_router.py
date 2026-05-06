@@ -29,7 +29,7 @@ def test_create_todo_success(client, mock_db, set_current_user):
         "complete": False,
     }
 
-    response = client.post("/todos/create_todo", json=payload)
+    response = client.post("/todos/", json=payload)
 
     assert response.status_code == status.HTTP_201_CREATED
     mock_db.add.assert_called_once()

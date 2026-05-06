@@ -1,11 +1,15 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from ..app.main import app
 from ..app.dependencies import get_db
 from ..app.auth import get_current_user
+from ..app.database import Base
 
+SQLITE_TEST_URL = "sqlite:///./test_integration.db"
 
 @pytest.fixture
 def mock_db():
@@ -33,3 +37,77 @@ def set_current_user():
 
     return _set
 
+
+@pytest.fixture(scope="session")
+def engine():
+    _engine = create_engine(SQLITE_TEST_URL, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=_engine)
+    yield _engine
+    Base.metadata.drop_all(bind=_engine)
+
+
+@pytest.fixture(scope="function")
+def db_session(engine):
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session = TestingSessionLocal()
+    yield session
+    session.close()
+    for table in reversed(Base.metadata.sorted_tables):
+        session.bind.execute(table.delete())
+    session.commit()
+
+
+@pytest.fixture(scope="function")
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+USER_PAYLOAD = {
+    "username": "johndoe",
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "password": "secret123",
+    "phone_number": "0501234567",
+}
+
+
+ADMIN_PAYLOAD = {
+    "username": "adminuser",
+    "email": "admin@example.com",
+    "first_name": "Admin",
+    "last_name": "User",
+    "password": "adminpass",
+    "phone_number": "0507654321",
+    "role": "admin",
+}
+
+
+TODO_PAYLOAD = {
+    "title": "Buy groceries",
+    "description": "Milk, eggs, bread",
+    "priority": 3,
+    "complete": False,
+}
+
+
+def register(client, payload=None):
+    payload = payload or USER_PAYLOAD
+    return client.post("/auth/", json=payload)
+
+def login(client, username, password):
+    return client.post("/auth/token", data={"username": username, "password": password})
+
+def auth_headers(client, username, password):
+    r = login(client, username, password)
+    token = r.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
