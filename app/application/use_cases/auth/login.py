@@ -22,7 +22,7 @@ class LoginUserUseCase:
         if not user:
             raise InvalidCredentialsError("Invalid email or password")
             
-        if not self.password_hasher.verify(dto.password, user.password_hash):
+        if not self.password_hasher.verify(dto.password, user.hashed_password):
             raise InvalidCredentialsError("Invalid email or password")
 
         return self.token_service.generate_token(user_id=user.id, role=user.role)
