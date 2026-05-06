@@ -4,10 +4,10 @@ from unittest.mock import MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ..app.main import app
-from ..app.dependencies import get_db
-from ..app.auth import get_current_user
-from ..app.database import Base
+from app.main import app
+from app.dependencies import get_db
+from app.auth import get_current_user
+from app.database import Base
 
 SQLITE_TEST_URL = "sqlite:///./test_integration.db"
 
@@ -32,7 +32,7 @@ def set_current_user():
     def _set(user_data):
         def override_get_current_user():
             return user_data
-
+        
         app.dependency_overrides[get_current_user] = override_get_current_user
 
     return _set
@@ -51,14 +51,15 @@ def db_session(engine):
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = TestingSessionLocal()
     yield session
-    session.close()
+    
     for table in reversed(Base.metadata.sorted_tables):
-        session.bind.execute(table.delete())
+        session.execute(table.delete())
     session.commit()
+    session.close()
 
 
 @pytest.fixture(scope="function")
-def client(db_session):
+def integration_client(db_session):
     def override_get_db():
         try:
             yield db_session
@@ -100,14 +101,14 @@ TODO_PAYLOAD = {
 }
 
 
-def register(client, payload=None):
+def register(integration_client, payload=None):
     payload = payload or USER_PAYLOAD
-    return client.post("/auth/", json=payload)
+    return integration_client.post("/auth/", json=payload)
 
-def login(client, username, password):
-    return client.post("/auth/token", data={"username": username, "password": password})
+def login(integration_client, username, password):
+    return integration_client.post("/auth/token", data={"username": username, "password": password})
 
-def auth_headers(client, username, password):
-    r = login(client, username, password)
+def auth_headers(integration_client, username, password):
+    r = login(integration_client, username, password)
     token = r.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
