@@ -4,6 +4,10 @@ from dataclasses import dataclass
 class RegisterUserDTO:
     email: str
     password: str
+    username: str
+    first_name: str
+    last_name: str
+    phone_number: str
 
 @dataclass(frozen=True)
 class LoginUserDTO:
@@ -14,3 +18,8 @@ class LoginUserDTO:
 class UserResponseDTO:
     id: int
     email: str
+    username: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    role: str

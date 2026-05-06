@@ -7,12 +7,12 @@ class CreateTodoUseCase:
         self.todo_repo = todo_repo
         self.todo_factory = todo_factory
 
-    def execute(self, dto: CreateTodoDTO, user_id: int) -> TodoResponseDTO:
+    def execute(self, dto: CreateTodoDTO, owner_id: int) -> TodoResponseDTO:
         todo = self.todo_factory.create_todo(
             title=dto.title,
             description=dto.description,
             priority_val=dto.priority,
-            user_id=user_id
+            owner_id=owner_id
         )
 
         self.todo_repo.add(todo)
@@ -22,5 +22,6 @@ class CreateTodoUseCase:
             title=todo.title,
             description=todo.description,
             priority=todo.priority.value,
-            user_id=todo.user_id
+            owner_id=todo.owner_id,
+            complete=todo.complete
         )

@@ -1,10 +1,23 @@
-from fastapi import HTTPException, Path, APIRouter, Depends
-from pydantic import BaseModel, Field
-from starlette import status
-from ..models import Todos
-from ..dependencies import db_dependency
-from typing import Annotated
-from ..auth import get_current_user
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel
+from typing import List
+
+from app.application.dto.todo_dto import CreateTodoDTO, UpdateTodoDTO, TodoResponseDTO
+from app.application.use_cases.todos.create import CreateTodoUseCase
+from app.application.use_cases.todos.get import GetAllUserTodosUseCase, GetTodoUseCase
+from app.application.use_cases.todos.update import UpdateTodoUseCase
+from app.application.use_cases.todos.delete import DeleteTodoUseCase
+from app.application.use_cases.todos.status import ChangeTodoStatusUseCase
+
+from app.presentation.dependencies import (
+    get_create_todo_use_case, 
+    get_all_user_todos_use_case,
+    get_todo_use_case,
+    get_update_todo_use_case,
+    get_delete_todo_use_case,
+    get_change_todo_status_use_case,
+    get_current_user_id
+)
 
 
 router = APIRouter(
@@ -13,87 +26,71 @@ router = APIRouter(
 )
 
 
-user_dependency = Annotated[dict, Depends(get_current_user)]
+class TodoCreateRequest(BaseModel):
+    title: str
+    description: str
+    priority: int
 
+class TodoUpdateRequest(BaseModel):
+    title: str
+    description: str
+    priority: int
 
-class TodoRequest(BaseModel):
-    title: str = Field(min_length=3, max_length=50)
-    description: str = Field(min_length=3, max_length=200)
-    priority: int = Field(gt=0, lt=6)
-    complete: bool = Field(default=False)
+class TodoResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    priority: int
+    owner_id: int
+    complete: bool
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                'title': 'Title',
-                'description': 'Description',
-                'priority': 5,
-                'complete': False,
-            }
-        }
-    }
+@router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+def create_todo(
+    request: TodoCreateRequest,
+    use_case: CreateTodoUseCase = Depends(get_create_todo_use_case),
+    owner_id: int = Depends(get_current_user_id)
+):
+    dto = CreateTodoDTO(title=request.title, description=request.description, priority=request.priority)
+    return use_case.execute(dto, owner_id)
 
+@router.get("/", response_model=List[TodoResponse])
+def get_todos(
+    use_case: GetAllUserTodosUseCase = Depends(get_all_user_todos_use_case),
+    owner_id: int = Depends(get_current_user_id)
+):
+    return use_case.execute(owner_id)
 
-def get_todo_by_id_and_owner(db: db_dependency, todo_id: int, owner_id: int):
-    return db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == owner_id).first()
+@router.get("/{todo_id}", response_model=TodoResponse)
+def get_todo(
+    todo_id: int,
+    use_case: GetTodoUseCase = Depends(get_todo_use_case),
+    owner_id: int = Depends(get_current_user_id)
+):
+    return use_case.execute(todo_id, owner_id)
 
-
-@router.get("/", status_code=status.HTTP_200_OK)
-async def read_all(user: user_dependency, db: db_dependency):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    return db.query(Todos).filter(Todos.owner_id == user.get("id")).all()
-
-
-@router.get("/{todo_id}", status_code=status.HTTP_200_OK)
-async def read_todo(user:user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    todo_model = get_todo_by_id_and_owner(db, todo_id, user.get('id'))
-    if todo_model is not None:
-        return todo_model
-    raise HTTPException(status_code=404, detail="Todo not found")
-
-
-@router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_todo(user: user_dependency,todo_request: TodoRequest, db: db_dependency):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-    todo_model = Todos(**todo_request.model_dump(), owner_id=user.get("id"))
-
-    db.add(todo_model)
-    db.commit()
-
-
-@router.put("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(user: user_dependency, db: db_dependency,
-                      todo_request: TodoRequest,
-                      todo_id: int = Path(gt=0)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-    todo_model = get_todo_by_id_and_owner(db, todo_id, user.get('id'))
-    if todo_model is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
-
-    todo_model.title = todo_request.title
-    todo_model.description = todo_request.description
-    todo_model.priority = todo_request.priority
-    todo_model.complete = todo_request.complete
-
-    db.add(todo_model)
-    db.commit()
-
+@router.put("/{todo_id}", response_model=TodoResponse)
+def update_todo(
+    todo_id: int,
+    request: TodoUpdateRequest,
+    use_case: UpdateTodoUseCase = Depends(get_update_todo_use_case),
+    owner_id: int = Depends(get_current_user_id)
+):
+    dto = UpdateTodoDTO(title=request.title, description=request.description, priority=request.priority)
+    return use_case.execute(todo_id, dto, owner_id=owner_id)
 
 @router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
+def delete_todo(
+    todo_id: int,
+    use_case: DeleteTodoUseCase = Depends(get_delete_todo_use_case),
+    owner_id: int = Depends(get_current_user_id)
+):
+    use_case.execute(todo_id, owner_id)
 
-    todo_model = get_todo_by_id_and_owner(db, todo_id, user.get('id'))
-    if todo_model is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
-
-    db.delete(todo_model)
-    db.commit()
+@router.patch("/{todo_id}/status", status_code=status.HTTP_204_NO_CONTENT)
+def change_todo_status(
+    todo_id: int,
+    complete: bool,
+    use_case: ChangeTodoStatusUseCase = Depends(get_change_todo_status_use_case),
+    owner_id: int = Depends(get_current_user_id)
+):
+    use_case.execute(todo_id=todo_id, owner_id=owner_id, complete=complete)

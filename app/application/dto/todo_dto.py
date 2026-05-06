@@ -18,4 +18,5 @@ class TodoResponseDTO:
     title: str
     description: str
     priority: int
-    user_id: int
+    owner_id: int
+    complete: bool

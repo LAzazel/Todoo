@@ -8,16 +8,28 @@ class UserFactory:
     def __init__(self, user_repo: IUserRepository):
         self.user_repo = user_repo
 
-    def create_user(self, email_str: str, password_hash: str) -> User:
-        email_vo = Email(email_str)
+    def create_user(
+        self, 
+        username: str, 
+        email: str, 
+        first_name: str, 
+        last_name: str, 
+        hashed_password: str, 
+        phone_number: str
+    ) -> User:
+        email_vo = Email(email)
 
         existing_user = self.user_repo.get_by_email(email_vo)
         if existing_user is not None:
-            raise UserAlreadyExistsError(f"Користувач з email {email_str} вже існує.")
+            raise UserAlreadyExistsError(f"User with email {email} already exists.")
 
 
         return User(
             id=None, 
             email=email_vo, 
-            password_hash=password_hash
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            hashed_password=hashed_password,
+            phone_number=phone_number
         )

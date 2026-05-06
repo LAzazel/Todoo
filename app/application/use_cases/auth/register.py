@@ -17,8 +17,23 @@ class RegisterUserUseCase:
     def execute(self, dto: RegisterUserDTO) -> UserResponseDTO:
         hashed_password = self.password_hasher.hash(dto.password)
         
-        user = self.user_factory.create_user(dto.email, hashed_password)
+        user = self.user_factory.create_user(
+            username=dto.username,
+            email_str=dto.email,
+            first_name=dto.first_name,
+            last_name=dto.last_name,
+            hashed_password=hashed_password,
+            phone_number=dto.phone_number
+        )
         
         self.user_repo.add(user)
         
-        return UserResponseDTO(id=user.id, email=user.email.value)
+        return UserResponseDTO(
+            id=user.id,
+            email=user.email.value,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            phone_number=user.phone_number,
+            role=user.role
+        )

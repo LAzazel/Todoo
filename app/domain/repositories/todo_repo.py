@@ -9,7 +9,7 @@ class ITodoRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all_by_user_id(self, user_id: int) -> List[Todo]:
+    def get_all_by_owner_id(self, owner_id: int) -> List[Todo]:
         pass
 
     @abstractmethod

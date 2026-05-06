@@ -8,10 +8,10 @@ class UpdateTodoUseCase:
     def __init__(self, todo_repo: ITodoRepository):
         self.todo_repo = todo_repo
 
-    def execute(self, todo_id: int, dto: UpdateTodoDTO, user_id: int) -> TodoResponseDTO:
+    def execute(self, todo_id: int, dto: UpdateTodoDTO, owner_id: int) -> TodoResponseDTO:
         todo = self.todo_repo.get_by_id(todo_id)
         
-        if not todo or todo.user_id != user_id:
+        if not todo or todo.owner_id != owner_id:
             raise TodoNotFoundError("Todo not found or you don't have access to it")
 
         new_priority = Priority(dto.priority)
@@ -21,5 +21,5 @@ class UpdateTodoUseCase:
 
         return TodoResponseDTO(
             id=todo.id, title=todo.title, description=todo.description, 
-            priority=todo.priority.value, user_id=todo.user_id
+            priority=todo.priority.value, owner_id=todo.owner_id, complete=todo.complete
         )

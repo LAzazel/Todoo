@@ -1,11 +1,17 @@
-from fastapi import HTTPException, Body, APIRouter, Depends
-from ..auth import get_current_user
-from starlette import status
-from ..models import Users
-from ..dependencies import db_dependency, bcrypt_context
-from typing import Annotated
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
 
-
+from app.application.use_cases.users.profile import (
+    GetUserProfileUseCase,
+    ChangePasswordUseCase,
+    ChangePhoneNumberUseCase
+)
+from app.presentation.dependencies import (
+    get_current_user_id,
+    get_user_profile_use_case,
+    get_change_password_use_case,
+    get_change_phone_number_use_case
+)
 
 router = APIRouter(
     prefix="/user",
@@ -13,42 +19,41 @@ router = APIRouter(
 )
 
 
-user_dependency = Annotated[dict, Depends(get_current_user)]
+class ChangePasswordRequest(BaseModel):
+    new_password: str = Field(min_length=6)
+
+class ChangePhoneNumberRequest(BaseModel):
+    new_phone_number: str = Field(min_length=10, max_length=15)
+
+class UserProfileResponse(BaseModel):
+    id: int
+    email: str
+    username: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    role: str
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
-async def read_current_user(user: user_dependency, db: db_dependency):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    return db.query(Users).filter(Users.id == user.get("id")).first()
-
+@router.get("/", response_model=UserProfileResponse, status_code=status.HTTP_200_OK)
+def read_current_user(
+    user_id: int = Depends(get_current_user_id),
+    use_case: GetUserProfileUseCase = Depends(get_user_profile_use_case)
+):
+    return use_case.execute(user_id)
 
 @router.put("/change_password", status_code=status.HTTP_204_NO_CONTENT)
-async def change_password(user: user_dependency, db: db_dependency, new_password: str = Body(min_length=6)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    user_model = db.query(Users).filter(Users.id == user.get("id")).first()
-
-    if user_model is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    new_hashed_password = bcrypt_context.hash(new_password)
-    user_model.hashed_password = new_hashed_password
-
-    db.add(user_model)
-    db.commit()
-
+def change_password(
+    request: ChangePasswordRequest,
+    user_id: int = Depends(get_current_user_id),
+    use_case: ChangePasswordUseCase = Depends(get_change_password_use_case)
+):
+    use_case.execute(user_id, request.new_password)
 
 @router.put("/change_phone_number", status_code=status.HTTP_204_NO_CONTENT)
-async def change_phone_number(user: user_dependency, db: db_dependency, new_phone_number: str = Body(min_length=10, max_length=15)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    user_model = db.query(Users).filter(Users.id == user.get("id")).first()
-
-    if user_model is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    user_model.phone_number = new_phone_number
-
-    db.add(user_model)
-    db.commit()
+def change_phone_number(
+    request: ChangePhoneNumberRequest,
+    user_id: int = Depends(get_current_user_id),
+    use_case: ChangePhoneNumberUseCase = Depends(get_change_phone_number_use_case)
+):
+    use_case.execute(user_id, request.new_phone_number)

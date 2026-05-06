@@ -14,7 +14,8 @@ class TodoMapper:
             title=orm_model.title,
             description=orm_model.description,
             priority=priority_vo,
-            user_id=orm_model.user_id
+            owner_id=orm_model.owner_id,
+            complete=orm_model.complete
         )
 
     @staticmethod
@@ -24,5 +25,6 @@ class TodoMapper:
             title=domain_model.title,
             description=domain_model.description,
             priority=domain_model.priority.value,
-            user_id=domain_model.user_id
+            owner_id=domain_model.owner_id,
+            complete=domain_model.complete
         )

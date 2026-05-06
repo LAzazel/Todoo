@@ -13,8 +13,8 @@ class SQLAlchemyTodoRepository(ITodoRepository):
         orm_model = self.session.query(TodoORM).filter(TodoORM.id == todo_id).first()
         return TodoMapper.to_domain(orm_model)
 
-    def get_all_by_user_id(self, user_id: int) -> List[Todo]:
-        orm_models = self.session.query(TodoORM).filter(TodoORM.user_id == user_id).all()
+    def get_all_by_owner_id(self, owner_id: int) -> List[Todo]:
+        orm_models = self.session.query(TodoORM).filter(TodoORM.owner_id == owner_id).all()
         return [TodoMapper.to_domain(m) for m in orm_models]
 
     def get_all(self) -> List[Todo]:

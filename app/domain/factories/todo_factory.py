@@ -3,13 +3,14 @@ from app.domain.value_objects.priority import Priority
 
 
 class TodoFactory:
-    def create_todo(self, title: str, description: str, priority_val: int, user_id: int) -> Todo:
+    def create_todo(self, title: str, description: str, priority_val: int, owner_id: int) -> Todo:
         priority = Priority(priority_val)
         
+
         return Todo(
-            id=None,
-            title=title,
-            description=description,
-            priority=priority,
-            user_id=user_id
-        )
+                title=title,
+                description=description,
+                priority=priority,
+                owner_id=owner_id,
+                complete=False
+            )

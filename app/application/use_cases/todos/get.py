@@ -8,10 +8,10 @@ class GetTodoUseCase:
     def __init__(self, todo_repo: ITodoRepository):
         self.todo_repo = todo_repo
 
-    def execute(self, todo_id: int, user_id: int) -> TodoResponseDTO:
+    def execute(self, todo_id: int, owner_id: int) -> TodoResponseDTO:
         todo = self.todo_repo.get_by_id(todo_id)
         
-        if not todo or todo.user_id != user_id:
+        if not todo or todo.owner_id != owner_id:
             raise TodoNotFoundError("Todo not found or you don't have access to it")
             
         return TodoResponseDTO(
@@ -19,15 +19,16 @@ class GetTodoUseCase:
             title=todo.title,
             description=todo.description,
             priority=todo.priority.value,
-            user_id=todo.user_id
+            owner_id=todo.owner_id,
+            complete=todo.complete
         )
 
 class GetAllUserTodosUseCase:
     def __init__(self, todo_repo: ITodoRepository):
         self.todo_repo = todo_repo
 
-    def execute(self, user_id: int) -> List[TodoResponseDTO]:
-        todos = self.todo_repo.get_all_by_user_id(user_id)
+    def execute(self, owner_id: int) -> List[TodoResponseDTO]:
+        todos = self.todo_repo.get_all_by_owner_id(owner_id)
         
         return [
             TodoResponseDTO(
@@ -35,6 +36,7 @@ class GetAllUserTodosUseCase:
                 title=todo.title,
                 description=todo.description,
                 priority=todo.priority.value,
-                user_id=todo.user_id
+                owner_id=todo.owner_id,
+                complete=todo.complete
             ) for todo in todos
         ]

@@ -1,9 +1,14 @@
-from fastapi import Depends, HTTPException, Path, APIRouter
-from typing import Annotated
-from starlette import status
-from ..models import Todos
-from ..auth import get_current_user
-from ..dependencies import db_dependency
+from fastapi import APIRouter, Depends, status
+from typing import List
+from pydantic import BaseModel
+
+from app.application.use_cases.admin.get_all import AdminGetAllUsersUseCase
+from app.application.use_cases.admin.delete_user import AdminDeleteUserUseCase
+from app.presentation.dependencies import (
+    get_admin_get_all_use_case, 
+    get_admin_delete_use_case,
+    get_current_user_role
+)
 
 
 router = APIRouter(
@@ -12,29 +17,21 @@ router = APIRouter(
 )
 
 
-user_dependency = Annotated[dict, Depends(get_current_user)]
+class UserResponse(BaseModel):
+    id: int
+    email: str
 
+@router.get("/users", response_model=List[UserResponse])
+def get_users(
+    use_case: AdminGetAllUsersUseCase = Depends(get_admin_get_all_use_case),
+    admin_role: str = Depends(get_current_user_role)
+):
+    return use_case.execute(admin_role)
 
-
-@router.get("/todo", status_code=status.HTTP_200_OK)
-async def read_all_todos(user: user_dependency, db: db_dependency):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    return db.query(Todos).all()
-
-
-@router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(user:user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
-    if todo_model is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    db.delete(todo_model)
-    db.commit()
-    return None
-
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    use_case: AdminDeleteUserUseCase = Depends(get_admin_delete_use_case),
+    admin_role: str = Depends(get_current_user_role)
+):
+    use_case.execute(user_id, admin_role)
