@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, Path, APIRouter
 from typing import Annotated
 from starlette import status
 from ..models import Todos
-from .auth import get_current_user
+from ..auth import get_current_user
 from ..dependencies import db_dependency
 
 

@@ -2,9 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock
 
-from ..main import app
-from ..dependencies import get_db
-from ..routers.auth import get_current_user
+from ..app.main import app
+from ..app.dependencies import get_db
+from ..app.auth import get_current_user
 
 
 @pytest.fixture

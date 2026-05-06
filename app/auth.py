@@ -1,4 +1,6 @@
 from datetime import timedelta, datetime, timezone
+from enum import Enum
+from sqlalchemy.exc import IntegrityError
 from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -17,6 +19,10 @@ router = APIRouter(
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
+class UserRole(str, Enum):
+    user = "user"
+    admin = "admin"
+
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -25,7 +31,7 @@ class CreateUserRequest(BaseModel):
     last_name: str
     password: str
     phone_number: str
-    role: str
+    role: UserRole = UserRole.user
 
 
 class Token(BaseModel):
@@ -80,8 +86,13 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
         phone_number=create_user_request.phone_number,
         is_active=True
     )
-    db.add(create_user_model)
-    db.commit()
+    try:
+        db.add(create_user_model)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Username or email already exists")
+    
 
 
 @router.post("/token", response_model=Token)

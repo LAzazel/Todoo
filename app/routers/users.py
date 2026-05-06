@@ -1,5 +1,5 @@
 from fastapi import HTTPException, Body, APIRouter, Depends
-from .auth import get_current_user
+from ..auth import get_current_user
 from starlette import status
 from ..models import Users
 from ..dependencies import db_dependency, bcrypt_context

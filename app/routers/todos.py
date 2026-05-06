@@ -4,7 +4,7 @@ from starlette import status
 from ..models import Todos
 from ..dependencies import db_dependency
 from typing import Annotated
-from .auth import get_current_user
+from ..auth import get_current_user
 
 
 router = APIRouter(
@@ -55,7 +55,7 @@ async def read_todo(user:user_dependency, db: db_dependency, todo_id: int = Path
     raise HTTPException(status_code=404, detail="Todo not found")
 
 
-@router.post("/create_todo", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_todo(user: user_dependency,todo_request: TodoRequest, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication failed")
