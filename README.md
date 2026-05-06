@@ -102,8 +102,8 @@ API буде доступне за адресою: [http://localhost:8000](http:
 | GET | `/user/` | Свій профіль | ✅ |
 | PUT | `/user/change_password` | Змінити пароль | ✅ |
 | PUT | `/user/change_phone_number` | Змінити телефон | ✅ |
-| GET | `/admin/todo` | Всі задачі (адмін) | ✅ admin |
-| DELETE | `/admin/todo/{id}` | Видалити будь-яку задачу (адмін) | ✅ admin |
+| GET | `/admin/users` | Всі користувачі (адмін) | ✅ admin |
+| DELETE | `/admin/users/{id}` | Видалити користувача (адмін) | ✅ admin |
 
 ## Тестування
 
