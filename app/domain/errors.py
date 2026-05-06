@@ -3,3 +3,9 @@ class DomainError(Exception):
 
 class ValidationError(DomainError):
     pass
+
+class UserAlreadyExistsError(DomainError):
+    pass
+
+class InvalidEmailError(DomainError):
+    pass
