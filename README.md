@@ -1,72 +1,124 @@
-# FastAPI TodoApp (Short Guide)
+# Todoo
 
-Simple learning project with FastAPI, JWT auth, role-based access (`user`/`admin`), todo CRUD, and Alembic migrations.
+REST API для управління особистими задачами (todo-list). Побудований на FastAPI з JWT-автентифікацією та SQLite.
 
-## Quick Start
+## Стек
 
-Run from project root (`fastApiProject`):
+- **Python 3.11+**
+- **FastAPI** — веб-фреймворк
+- **SQLAlchemy** — ORM
+- **SQLite** — база даних
+- **JWT** — автентифікація
+- **pytest + httpx** — тестування
 
-```powershell
+## Структура проекту
+
+```
+Todoo/
+├── app/
+│   ├── auth.py          # JWT логіка, реєстрація, логін
+│   ├── main.py          # точка входу FastAPI
+│   ├── models.py        # моделі БД
+│   ├── database.py      # підключення до БД
+│   ├── dependencies.py  # спільні залежності
+│   ├── config.py        # змінні середовища
+│   └── routers/
+│       ├── todos.py     # CRUD задач
+│       ├── users.py     # профіль користувача
+│       └── admin.py     # адмін-ендпоінти
+├── tests/
+│   ├── conftest.py           # фікстури
+│   ├── test_auth_unit.py     # unit-тести
+│   └── test_integration.py  # інтеграційні тести
+├── docs/
+│   └── use-cases.md
+├── .env.example
+└── requirements.txt
+```
+
+## Запуск
+
+### 1. Клонувати репозиторій
+
+```bash
+git clone https://github.com/<your-username>/Todoo.git
+cd Todoo
+```
+
+### 2. Створити віртуальне середовище та встановити залежності
+
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install fastapi uvicorn sqlalchemy alembic passlib[bcrypt] python-jose[cryptography] python-multipart pydantic email-validator pytest
+
+# macOS / Linux
+source .venv/bin/activate
+
+# Windows
+.venv\Scripts\activate
+
+pip install -r requirements.txt
 ```
 
-## Environment
+### 3. Налаштувати змінні середовища
 
-Create local env file from template and set your own secret:
-
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 ```
 
-Set `SECRET_KEY` in `.env` to a long random value.
+Відкрити `.env` і встановити `SECRET_KEY` — власний випадковий рядок:
 
-## Run API
-
-Use package path from the root folder:
-
-```powershell
-python -m uvicorn TodoApp.main:app --reload
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-- Health check: `http://127.0.0.1:8000/health_check`
-- Docs: `http://127.0.0.1:8000/docs`
+Вставити результат у `.env`:
 
-## Alembic Migrations
-
-Current `TodoApp/alembic/env.py` imports `models` directly, so run Alembic from `TodoApp`:
-
-```powershell
-Set-Location .\TodoApp
-alembic upgrade head
-alembic current
+```
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
 ```
 
-Create migration:
+### 4. Запустити сервер
 
-```powershell
-Set-Location .\TodoApp
-alembic revision -m "your_message"
+```bash
+uvicorn app.main:app --reload
 ```
 
-## Tests
+API буде доступне за адресою: [http://localhost:8000](http://localhost:8000)
 
-Run from project root:
+Документація: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-```powershell
-python -m pytest TodoApp/test -q
+## API
+
+| Метод | Ендпоінт | Опис | Авторизація |
+|---|---|---|---|
+| POST | `/auth/` | Реєстрація | — |
+| POST | `/auth/token` | Вхід, отримання JWT | — |
+| GET | `/todos/` | Список своїх задач | ✅ |
+| POST | `/todos/` | Створити задачу | ✅ |
+| GET | `/todos/{id}` | Отримати задачу | ✅ |
+| PUT | `/todos/{id}` | Оновити задачу | ✅ |
+| DELETE | `/todos/{id}` | Видалити задачу | ✅ |
+| GET | `/user/` | Свій профіль | ✅ |
+| PUT | `/user/change_password` | Змінити пароль | ✅ |
+| PUT | `/user/change_phone_number` | Змінити телефон | ✅ |
+| GET | `/admin/todo` | Всі задачі (адмін) | ✅ admin |
+| DELETE | `/admin/todo/{id}` | Видалити будь-яку задачу (адмін) | ✅ admin |
+
+## Тестування
+
+```bash
+pytest
 ```
 
-## Common Issue
+Запустити тільки unit-тести:
 
-### `ModuleNotFoundError: No module named 'TodoApp'`
+```bash
+pytest tests/test_auth_unit.py -v
+```
 
-Usually happens when starting from `TodoApp` folder with `uvicorn main:app`.
+Запустити тільки інтеграційні тести:
 
-Use this instead from root:
-
-```powershell
-python -m uvicorn TodoApp.main:app --reload
+```bash
+pytest tests/test_integration.py -v
 ```
