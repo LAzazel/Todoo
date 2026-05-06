@@ -9,3 +9,15 @@ class UserAlreadyExistsError(DomainError):
 
 class InvalidEmailError(DomainError):
     pass
+
+class InvalidCredentialsError(DomainError):
+    pass
+
+class TodoNotFoundError(DomainError):
+    pass
+
+class UserNotFoundError(DomainError):
+    pass
+
+class UnauthorizedAdminAccessError(DomainError):
+    pass
