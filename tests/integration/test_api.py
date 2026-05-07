@@ -1,4 +1,5 @@
 from tests.conftest import USER_PAYLOAD, ADMIN_PAYLOAD, TODO_PAYLOAD, register, auth_headers
+from app.infrastructure.orm.models import UserORM
 
 
 def test_register_and_login_success(integration_client):
@@ -35,11 +36,15 @@ def test_regular_user_cannot_access_admin(integration_client):
     assert response.status_code == 403
 
 
-def test_admin_get_all_users(integration_client):
+def test_admin_get_all_users(integration_client, db_session):
     register(integration_client, USER_PAYLOAD)
 
     register(integration_client, ADMIN_PAYLOAD)
-
+    
+    admin_user = db_session.query(UserORM).filter(UserORM.email == ADMIN_PAYLOAD["email"]).first()
+    admin_user.role = "admin"
+    db_session.commit()
+    
     headers_admin = auth_headers(integration_client, ADMIN_PAYLOAD["email"], ADMIN_PAYLOAD["password"])
     response = integration_client.get("/admin/users", headers=headers_admin)
     
@@ -47,15 +52,19 @@ def test_admin_get_all_users(integration_client):
     assert len(response.json()) >= 2
 
 
-def test_admin_delete_user(integration_client):
+def test_admin_delete_user(integration_client, db_session):
     register(integration_client, USER_PAYLOAD)
     
     register(integration_client, ADMIN_PAYLOAD)
+    
+    admin_user = db_session.query(UserORM).filter(UserORM.email == ADMIN_PAYLOAD["email"]).first()
+    admin_user.role = "admin"
+    db_session.commit()
+    
     headers_admin = auth_headers(integration_client, ADMIN_PAYLOAD["email"], ADMIN_PAYLOAD["password"])
     
     users_list = integration_client.get("/admin/users", headers=headers_admin).json()
     user_to_delete_id = next(u["id"] for u in users_list if u["email"] == USER_PAYLOAD["email"])
-
+    
     delete_response = integration_client.delete(f"/admin/users/{user_to_delete_id}", headers=headers_admin)
     assert delete_response.status_code == 204
-    

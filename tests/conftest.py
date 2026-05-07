@@ -3,16 +3,19 @@ from fastapi.testclient import TestClient
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.infrastructure.database import Base
 from app.presentation.dependencies import get_db
 
+from app.infrastructure.orm.models import UserORM, TodoORM
+
 SQLITE_TEST_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="session")
 def engine():
-    _engine = create_engine(SQLITE_TEST_URL, connect_args={"check_same_thread": False})
+    _engine = create_engine(SQLITE_TEST_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(bind=_engine)
     yield _engine
     Base.metadata.drop_all(bind=_engine)
