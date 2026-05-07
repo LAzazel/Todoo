@@ -9,31 +9,102 @@ REST API для управління особистими задачами (todo
 - **SQLAlchemy** — ORM
 - **SQLite** — база даних
 - **JWT** — автентифікація
-- **pytest + httpx** — тестування
+- **pytest** — тестування
 
 ## Структура проекту
 
 ```
 Todoo/
 ├── app/
-│   ├── auth.py          # JWT логіка, реєстрація, логін
-│   ├── main.py          # точка входу FastAPI
-│   ├── models.py        # моделі БД
-│   ├── database.py      # підключення до БД
-│   ├── dependencies.py  # спільні залежності
-│   ├── config.py        # змінні середовища
-│   └── routers/
-│       ├── todos.py     # CRUD задач
-│       ├── users.py     # профіль користувача
-│       └── admin.py     # адмін-ендпоінти
+│   ├── domain/                        # Бізнес-логіка. Не імпортує нічого зовнішнього
+│   │   ├── models/
+│   │   │   ├── user.py                # Доменна модель User
+│   │   │   └── todo.py                # Доменна модель Todo
+│   │   ├── value_objects/
+│   │   │   ├── email.py               # Email з валідацією формату
+│   │   │   └── priority.py            # Priority (1–5)
+│   │   ├── repositories/
+│   │   │   ├── user_repo.py           # Інтерфейс IUserRepository (ABC)
+│   │   │   └── todo_repo.py           # Інтерфейс ITodoRepository (ABC)
+│   │   ├── factories/
+│   │   │   ├── user_factory.py        # Створення User з перевіркою унікальності
+│   │   │   └── todo_factory.py        # Створення Todo з перевіркою інваріантів
+│   │   └── errors.py                  # Доменні помилки (без HTTP)
+│   │
+│   ├── application/                   # Use cases. Залежить тільки від domain
+│   │   ├── use_cases/
+│   │   │   ├── auth/
+│   │   │   │   ├── register.py        # RegisterUserUseCase
+│   │   │   │   └── login.py           # LoginUserUseCase
+│   │   │   ├── todos/
+│   │   │   │   ├── create.py          # CreateTodoUseCase
+│   │   │   │   ├── get.py             # GetTodoUseCase, GetAllUserTodosUseCase
+│   │   │   │   ├── update.py          # UpdateTodoUseCase
+│   │   │   │   ├── delete.py          # DeleteTodoUseCase
+│   │   │   │   └── status.py          # ChangeTodoStatusUseCase
+│   │   │   ├── users/
+│   │   │   │   └── profile.py         # GetUserProfileUseCase, ChangePasswordUseCase
+│   │   │   └── admin/
+│   │   │       ├── get_all.py         # AdminGetAllUsersUseCase
+│   │   │       └── delete_user.py     # AdminDeleteUserUseCase
+│   │   ├── dto/
+│   │   │   ├── user_dto.py            # RegisterUserDTO, LoginUserDTO, UserResponseDTO
+│   │   │   └── todo_dto.py            # CreateTodoDTO, UpdateTodoDTO, TodoResponseDTO
+│   │   └── interfaces/
+│   │       └── auth_services.py       # IPasswordHasher, ITokenService
+│   │
+│   ├── infrastructure/                # Реалізації. Залежить від domain
+│   │   ├── orm/
+│   │   │   └── models.py              # SQLAlchemy ORM-моделі (UserORM, TodoORM)
+│   │   ├── repositories/
+│   │   │   ├── user_repo.py           # SQLAlchemyUserRepository
+│   │   │   └── todo_repo.py           # SQLAlchemyTodoRepository
+│   │   ├── mappers/
+│   │   │   ├── user_mapper.py         # UserORM ↔ User
+│   │   │   └── todo_mapper.py         # TodoORM ↔ Todo
+│   │   ├── auth/
+│   │   │   └── jwt_service.py         # PasslibPasswordHasher, JoseTokenService
+│   │   └── database.py                # SQLAlchemy engine, session, get_db
+│   │
+│   ├── presentation/                  # HTTP шар. Залежить від application
+│   │   ├── routers/
+│   │   │   ├── auth.py                # POST /auth/register, POST /auth/login
+│   │   │   ├── todos.py               # CRUD /todos/
+│   │   │   ├── users.py               # GET/PUT /user/
+│   │   │   └── admin.py               # GET/DELETE /admin/users
+│   │   ├── dependencies.py            # FastAPI Depends()
+│   │   └── error_handler.py           # DomainError → HTTP статус
+│   │
+│   ├── config.py                      # Змінні середовища
+│   └── main.py                        # Точка входу FastAPI
+│
 ├── tests/
-│   ├── conftest.py           # фікстури
-│   ├── test_auth_unit.py     # unit-тести
-│   └── test_integration.py  # інтеграційні тести
+│   ├── unit/
+│   │   ├── domain/
+│   │   │   ├── test_value_objects.py  # Email, Priority
+│   │   │   ├── test_models.py         # User, Todo — поведінка та інваріанти
+│   │   │   └── test_factories.py      # UserFactory, TodoFactory
+│   │   └── application/
+│   │       └── test_use_cases.py      # Всі use cases з fake-репозиторіями
+│   └── integration/
+│       └── test_api.py                # HTTP → реальна тестова БД
+│
 ├── docs/
-│   └── use-cases.md
+│   ├── use-cases.md
+│   └── analysis/
+│       └── lab2.md
+│
 ├── .env.example
-└── requirements.txt
+├── .gitignore
+├── pytest.ini
+├── requirements.txt
+└── README.md
+```
+
+## Правило залежностей
+ 
+```
+Presentation → Application → Domain ← Infrastructure
 ```
 
 ## Запуск
@@ -84,41 +155,47 @@ ALGORITHM=HS256
 uvicorn app.main:app --reload
 ```
 
-API буде доступне за адресою: [http://localhost:8000](http://localhost:8000)
-
-Документація: [http://localhost:8000/docs](http://localhost:8000/docs)
+Документація API: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## API
-
+ 
 | Метод | Ендпоінт | Опис | Авторизація |
 |---|---|---|---|
-| POST | `/auth/` | Реєстрація | — |
-| POST | `/auth/token` | Вхід, отримання JWT | — |
+| POST | `/auth/register` | Реєстрація | — |
+| POST | `/auth/login` | Вхід, отримання JWT | — |
 | GET | `/todos/` | Список своїх задач | ✅ |
 | POST | `/todos/` | Створити задачу | ✅ |
 | GET | `/todos/{id}` | Отримати задачу | ✅ |
 | PUT | `/todos/{id}` | Оновити задачу | ✅ |
 | DELETE | `/todos/{id}` | Видалити задачу | ✅ |
+| PATCH | `/todos/{id}/status` | Змінити статус | ✅ |
 | GET | `/user/` | Свій профіль | ✅ |
 | PUT | `/user/change_password` | Змінити пароль | ✅ |
 | PUT | `/user/change_phone_number` | Змінити телефон | ✅ |
-| GET | `/admin/users` | Всі користувачі (адмін) | ✅ admin |
-| DELETE | `/admin/users/{id}` | Видалити користувача (адмін) | ✅ admin |
+| GET | `/admin/users` | Всі користувачі | ✅ admin |
+| DELETE | `/admin/users/{id}` | Видалити користувача | ✅ admin |
 
 ## Тестування
-
+ 
 ```bash
 pytest
 ```
-
-Запустити тільки unit-тести:
-
+ 
+Тільки unit-тести домену:
+ 
 ```bash
-pytest tests/test_auth_unit.py -v
+pytest tests/unit/domain/ -v
 ```
-
-Запустити тільки інтеграційні тести:
-
+ 
+Тільки unit-тести application layer:
+ 
 ```bash
-pytest tests/test_integration.py -v
+pytest tests/unit/application/ -v
 ```
+ 
+Тільки інтеграційні тести:
+ 
+```bash
+pytest tests/integration/ -v
+```
+ 
