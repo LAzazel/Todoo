@@ -16,7 +16,9 @@ class AdminGetAllUsersUseCase:
         
         return [
             UserResponseDTO(
-                id=user.id,
-                email=user.email.value
+                id=user.id, email=user.email.value,
+                username=user.username, first_name=user.first_name,
+                last_name=user.last_name, phone_number=user.phone_number,
+                role=user.role
             ) for user in users
         ]
