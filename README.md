@@ -31,25 +31,35 @@ Todoo/
 │   │   │   └── todo_factory.py        # Створення Todo з перевіркою інваріантів
 │   │   └── errors.py                  # Доменні помилки (без HTTP)
 │   │
-│   ├── application/                   # Use cases. Залежить тільки від domain
-│   │   ├── use_cases/
-│   │   │   ├── auth/
-│   │   │   │   ├── register.py        # RegisterUserUseCase
-│   │   │   │   └── login.py           # LoginUserUseCase
+│   ├── application/                   # CQS: команди і запити окремо
+│   │   ├── commands/                  # Змінюють стан, не повертають дані
 │   │   │   ├── todos/
-│   │   │   │   ├── create.py          # CreateTodoUseCase
-│   │   │   │   ├── get.py             # GetTodoUseCase, GetAllUserTodosUseCase
-│   │   │   │   ├── update.py          # UpdateTodoUseCase
-│   │   │   │   ├── delete.py          # DeleteTodoUseCase
-│   │   │   │   └── status.py          # ChangeTodoStatusUseCase
+│   │   │   │   ├── create_todo.py     # CreateTodoCommand + Handler → повертає ID
+│   │   │   │   ├── update_todo.py     # UpdateTodoCommand + Handler → None
+│   │   │   │   ├── delete_todo.py     # DeleteTodoCommand + Handler → None
+│   │   │   │   └── change_status.py   # ChangeTodoStatusCommand + Handler → None
 │   │   │   ├── users/
-│   │   │   │   └── profile.py         # GetUserProfileUseCase, ChangePasswordUseCase
+│   │   │   │   ├── register_user.py   # RegisterUserCommand + Handler → повертає ID
+│   │   │   │   ├── change_password.py # ChangePasswordCommand + Handler → None
+│   │   │   │   └── change_phone.py    # ChangePhoneCommand + Handler → None
 │   │   │   └── admin/
-│   │   │       ├── get_all.py         # AdminGetAllUsersUseCase
-│   │   │       └── delete_user.py     # AdminDeleteUserUseCase
-│   │   ├── dto/
-│   │   │   ├── user_dto.py            # RegisterUserDTO, LoginUserDTO, UserResponseDTO
-│   │   │   └── todo_dto.py            # CreateTodoDTO, UpdateTodoDTO, TodoResponseDTO
+│   │   │       └── delete_user.py     # DeleteUserCommand + Handler → None
+│   │   │
+│   │   ├── queries/                   # Читають стан, повертають Read Models
+│   │   │   ├── todos/
+│   │   │   │   ├── get_todo.py        # GetTodoQuery + Handler → TodoReadModel
+│   │   │   │   └── get_all_todos.py   # GetAllTodosQuery + Handler → List[TodoReadModel]
+│   │   │   ├── users/
+│   │   │   │   └── get_profile.py     # GetProfileQuery + Handler → UserReadModel
+│   │   │   ├── admin/
+│   │   │   │   └── get_all_users.py   # GetAllUsersQuery + Handler → List[UserReadModel]
+│   │   │   └── auth/
+│   │   │       └── login.py           # LoginQuery + Handler → JWT token
+│   │   │
+│   │   ├── read_models/               # DTO оптимізовані під відповідь клієнту
+│   │   │   ├── todo_read_model.py     # TodoReadModel (frozen dataclass)
+│   │   │   └── user_read_model.py     # UserReadModel (frozen dataclass)
+│   │   │
 │   │   └── interfaces/
 │   │       └── auth_services.py       # IPasswordHasher, ITokenService
 │   │
@@ -85,14 +95,15 @@ Todoo/
 │   │   │   ├── test_models.py         # User, Todo — поведінка та інваріанти
 │   │   │   └── test_factories.py      # UserFactory, TodoFactory
 │   │   └── application/
-│   │       └── test_use_cases.py      # Всі use cases з fake-репозиторіями
+│   │       └── test_commands.py       # Command Handlers без БД
 │   └── integration/
 │       └── test_api.py                # HTTP → реальна тестова БД
 │
 ├── docs/
 │   ├── use-cases.md
 │   └── analysis/
-│       └── lab2.md
+│       ├── lab2.md
+│       └── lab3.md
 │
 ├── .env.example
 ├── .gitignore
@@ -104,7 +115,7 @@ Todoo/
 ## Правило залежностей
  
 ```
-Presentation → Application → Domain ← Infrastructure
+Presentation → Commands/Queries → Domain ← Infrastructure
 ```
 
 ## Запуск
@@ -159,21 +170,21 @@ uvicorn app.main:app --reload
 
 ## API
  
-| Метод | Ендпоінт | Опис | Авторизація |
+| Метод | Ендпоінт | Тип | Авторизація |
 |---|---|---|---|
-| POST | `/auth/register` | Реєстрація | — |
-| POST | `/auth/login` | Вхід, отримання JWT | — |
-| GET | `/todos/` | Список своїх задач | ✅ |
-| POST | `/todos/` | Створити задачу | ✅ |
-| GET | `/todos/{id}` | Отримати задачу | ✅ |
-| PUT | `/todos/{id}` | Оновити задачу | ✅ |
-| DELETE | `/todos/{id}` | Видалити задачу | ✅ |
-| PATCH | `/todos/{id}/status` | Змінити статус | ✅ |
-| GET | `/user/` | Свій профіль | ✅ |
-| PUT | `/user/change_password` | Змінити пароль | ✅ |
-| PUT | `/user/change_phone_number` | Змінити телефон | ✅ |
-| GET | `/admin/users` | Всі користувачі | ✅ admin |
-| DELETE | `/admin/users/{id}` | Видалити користувача | ✅ admin |
+| POST | `/auth/register` | Command | — |
+| POST | `/auth/login` | Query | — |
+| GET | `/todos/` | Query | ✅ |
+| POST | `/todos/` | Command | ✅ |
+| GET | `/todos/{id}` | Query | ✅ |
+| PUT | `/todos/{id}` | Command | ✅ |
+| DELETE | `/todos/{id}` | Command | ✅ |
+| PATCH | `/todos/{id}/status` | Command | ✅ |
+| GET | `/user/` | Query | ✅ |
+| PUT | `/user/change_password` | Command | ✅ |
+| PUT | `/user/change_phone_number` | Command | ✅ |
+| GET | `/admin/users` | Query | ✅ admin |
+| DELETE | `/admin/users/{id}` | Command | ✅ admin |
 
 ## Тестування
  
@@ -181,16 +192,10 @@ uvicorn app.main:app --reload
 pytest
 ```
  
-Тільки unit-тести домену:
+Тільки unit-тести (без БД):
  
 ```bash
-pytest tests/unit/domain/ -v
-```
- 
-Тільки unit-тести application layer:
- 
-```bash
-pytest tests/unit/application/ -v
+pytest tests/unit/ -v
 ```
  
 Тільки інтеграційні тести:
@@ -198,4 +203,3 @@ pytest tests/unit/application/ -v
 ```bash
 pytest tests/integration/ -v
 ```
- 
