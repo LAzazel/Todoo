@@ -1,0 +1,21 @@
+from dataclasses import dataclass
+from app.domain.errors import UserNotFoundError
+from app.domain.repositories.user_repo import IUserRepository
+
+
+@dataclass(frozen=True)
+class ChangePhoneCommand:
+    user_id: int
+    new_phone: str
+
+class ChangePhoneHandler:
+    def __init__(self, user_repo: IUserRepository):
+        self.user_repo = user_repo
+
+    def execute(self, command: ChangePhoneCommand) -> None:
+        user = self.user_repo.get_by_id(command.user_id)
+        if not user:
+            raise UserNotFoundError("User not found")
+
+        user.update_phone_number(command.new_phone)
+        self.user_repo.update(user)
