@@ -9,7 +9,7 @@ from app.application.commands.users.change_phone import ChangePhoneCommand, Chan
 
 from app.domain.errors import UserNotFoundError, InvalidCredentialsError, UnauthorizedAdminAccessError
 
-class TestUseCases:
+class TestCommands:
     def test_register_success(self):
         repo_mock = MagicMock()
         factory_mock = MagicMock()

@@ -71,7 +71,7 @@ def get_todo(
     query = GetTodoQuery(todo_id=todo_id, owner_id=owner_id)
     return handler.execute(query)
 
-@router.put("/{todo_id}", response_model=TodoResponse)
+@router.put("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def update_todo(
     todo_id: int,
     request: TodoUpdateRequest,
