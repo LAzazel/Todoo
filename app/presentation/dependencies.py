@@ -13,19 +13,20 @@ from app.infrastructure.auth.jwt_service import PasslibPasswordHasher, JoseToken
 from app.domain.factories.user_factory import UserFactory
 from app.domain.factories.todo_factory import TodoFactory
 
-from app.application.use_cases.auth.register import RegisterUserUseCase
-from app.application.use_cases.auth.login import LoginUserUseCase
+from app.application.commands.users.register_user import RegisterUserHandler
+from app.application.commands.todos.create_todo import CreateTodoHandler
+from app.application.commands.todos.update_todo import UpdateTodoHandler
+from app.application.commands.todos.delete_todo import DeleteTodoHandler
+from app.application.commands.todos.change_status import ChangeTodoStatusHandler
+from app.application.commands.users.change_password import ChangePasswordHandler
+from app.application.commands.users.change_phone import ChangePhoneHandler
+from app.application.commands.admin.delete_user import DeleteUserHandler
 
-from app.application.use_cases.todos.create import CreateTodoUseCase
-from app.application.use_cases.todos.get import GetAllUserTodosUseCase, GetTodoUseCase
-from app.application.use_cases.todos.update import UpdateTodoUseCase
-from app.application.use_cases.todos.delete import DeleteTodoUseCase
-from app.application.use_cases.todos.status import ChangeTodoStatusUseCase
-
-from app.application.use_cases.admin.get_all import AdminGetAllUsersUseCase
-from app.application.use_cases.admin.delete_user import AdminDeleteUserUseCase
-
-from app.application.use_cases.users.profile import (GetUserProfileUseCase, ChangePasswordUseCase, ChangePhoneNumberUseCase)
+from app.application.queries.auth.login import LoginHandler
+from app.application.queries.todos.get_todo import GetTodoHandler
+from app.application.queries.todos.get_all_todos import GetAllTodosHandler
+from app.application.queries.users.get_profile import GetProfileHandler
+from app.application.queries.admin.get_all_users import GetAllUsersHandler
 
 from app.config import SECRET_KEY, ALGORITHM
 
@@ -52,60 +53,30 @@ def get_todo_factory():
     return TodoFactory()
 
 
-def get_register_use_case(
-    user_repo = Depends(get_user_repo),
-    user_factory = Depends(get_user_factory),
-    password_hasher = Depends(get_password_hasher)
-):
-    return RegisterUserUseCase(user_repo, user_factory, password_hasher)
+def get_register_handler(user_repo=Depends(get_user_repo), factory=Depends(get_user_factory), hasher=Depends(get_password_hasher)):
+    return RegisterUserHandler(user_repo, factory, hasher)
 
-def get_login_use_case(
-    user_repo = Depends(get_user_repo),
-    password_hasher = Depends(get_password_hasher),
-    token_service = Depends(get_token_service)
-):
-    return LoginUserUseCase(user_repo, password_hasher, token_service)
+def get_create_todo_handler(repo=Depends(get_todo_repo), factory=Depends(get_todo_factory)):
+    return CreateTodoHandler(repo, factory)
 
+def get_update_todo_handler(repo=Depends(get_todo_repo)): return UpdateTodoHandler(repo)
+def get_delete_todo_handler(repo=Depends(get_todo_repo)): return DeleteTodoHandler(repo)
+def get_change_status_handler(repo=Depends(get_todo_repo)): return ChangeTodoStatusHandler(repo)
 
-def get_create_todo_use_case(
-    todo_repo = Depends(get_todo_repo),
-    todo_factory = Depends(get_todo_factory)
-):
-    return CreateTodoUseCase(todo_repo, todo_factory)
+def get_change_password_handler(repo=Depends(get_user_repo), hasher=Depends(get_password_hasher)):
+    return ChangePasswordHandler(repo, hasher)
 
-def get_all_user_todos_use_case(todo_repo = Depends(get_todo_repo)):
-    return GetAllUserTodosUseCase(todo_repo)
-
-def get_todo_use_case(todo_repo = Depends(get_todo_repo)):
-    return GetTodoUseCase(todo_repo)
-
-def get_update_todo_use_case(todo_repo = Depends(get_todo_repo)):
-    return UpdateTodoUseCase(todo_repo)
-
-def get_delete_todo_use_case(todo_repo = Depends(get_todo_repo)):
-    return DeleteTodoUseCase(todo_repo)
-
-def get_change_todo_status_use_case(todo_repo = Depends(get_todo_repo)):
-    return ChangeTodoStatusUseCase(todo_repo)
-
-def get_admin_get_all_use_case(user_repo = Depends(get_user_repo)):
-    return AdminGetAllUsersUseCase(user_repo)
-
-def get_admin_delete_use_case(user_repo = Depends(get_user_repo)):
-    return AdminDeleteUserUseCase(user_repo)
+def get_change_phone_handler(repo=Depends(get_user_repo)): return ChangePhoneHandler(repo)
+def get_admin_delete_user_handler(repo=Depends(get_user_repo)): return DeleteUserHandler(repo)
 
 
-def get_user_profile_use_case(user_repo = Depends(get_user_repo)):
-    return GetUserProfileUseCase(user_repo)
+def get_login_handler(repo=Depends(get_user_repo), hasher=Depends(get_password_hasher), token_svc=Depends(get_token_service)):
+    return LoginHandler(repo, hasher, token_svc)
 
-def get_change_password_use_case(
-    user_repo = Depends(get_user_repo),
-    password_hasher = Depends(get_password_hasher)
-):
-    return ChangePasswordUseCase(user_repo, password_hasher)
-
-def get_change_phone_number_use_case(user_repo = Depends(get_user_repo)):
-    return ChangePhoneNumberUseCase(user_repo)
+def get_todo_handler(repo=Depends(get_todo_repo)): return GetTodoHandler(repo)
+def get_all_todos_handler(repo=Depends(get_todo_repo)): return GetAllTodosHandler(repo)
+def get_profile_handler(repo=Depends(get_user_repo)): return GetProfileHandler(repo)
+def get_admin_get_all_handler(repo=Depends(get_user_repo)): return GetAllUsersHandler(repo)
 
 
 def get_current_user_id(
