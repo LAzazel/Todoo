@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
-from app.application.use_cases.users.profile import (
-    GetUserProfileUseCase,
-    ChangePasswordUseCase,
-    ChangePhoneNumberUseCase
-)
+
+from app.application.queries.users.get_profile import GetProfileQuery, GetProfileHandler
+from app.application.commands.users.change_password import ChangePasswordCommand, ChangePasswordHandler
+from app.application.commands.users.change_phone import ChangePhoneCommand, ChangePhoneHandler
+
 from app.presentation.dependencies import (
     get_current_user_id,
-    get_user_profile_use_case,
-    get_change_password_use_case,
-    get_change_phone_number_use_case
+    get_profile_handler,
+    get_change_password_handler,
+    get_change_phone_handler
 )
 
 router = APIRouter(
@@ -38,22 +38,25 @@ class UserProfileResponse(BaseModel):
 @router.get("/", response_model=UserProfileResponse, status_code=status.HTTP_200_OK)
 def read_current_user(
     user_id: int = Depends(get_current_user_id),
-    use_case: GetUserProfileUseCase = Depends(get_user_profile_use_case)
+    handler: GetProfileHandler = Depends(get_profile_handler)
 ):
-    return use_case.execute(user_id)
+    query = GetProfileQuery(user_id=user_id)
+    return handler.execute(query)
 
 @router.put("/change_password", status_code=status.HTTP_204_NO_CONTENT)
 def change_password(
     request: ChangePasswordRequest,
     user_id: int = Depends(get_current_user_id),
-    use_case: ChangePasswordUseCase = Depends(get_change_password_use_case)
+    handler: ChangePasswordHandler = Depends(get_change_password_handler)
 ):
-    use_case.execute(user_id, request.new_password)
+    command = ChangePasswordCommand(user_id=user_id, new_password=request.new_password)
+    handler.execute(command)
 
 @router.put("/change_phone_number", status_code=status.HTTP_204_NO_CONTENT)
 def change_phone_number(
     request: ChangePhoneNumberRequest,
     user_id: int = Depends(get_current_user_id),
-    use_case: ChangePhoneNumberUseCase = Depends(get_change_phone_number_use_case)
+    handler: ChangePhoneHandler = Depends(get_change_phone_handler)
 ):
-    use_case.execute(user_id, request.new_phone_number)
+    command = ChangePhoneCommand(user_id=user_id, new_phone_number=request.new_phone_number)
+    handler.execute(command)

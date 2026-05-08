@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, EmailStr
 
-from app.application.dto.user_dto import RegisterUserDTO, LoginUserDTO
-from app.application.use_cases.auth.register import RegisterUserUseCase
-from app.application.use_cases.auth.login import LoginUserUseCase
-from app.presentation.dependencies import get_register_use_case, get_login_use_case
+from app.application.commands.users import RegisterUserCommand, RegisterUserHandler
+from app.application.queries.auth import LoginQuery, LoginHandler
+from app.presentation.dependencies import get_register_handler, get_login_handler
 
 router = APIRouter(
     prefix="/auth",
@@ -30,24 +29,24 @@ class TokenResponse(BaseModel):
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(
     request: AuthRegisterRequest,
-    use_case: RegisterUserUseCase = Depends(get_register_use_case)
+    handler: RegisterUserHandler = Depends(get_register_handler)
 ):
-    dto = RegisterUserDTO(
-        email=request.email, 
+    command = RegisterUserCommand(
+        email=request.email,
         password=request.password,
         username=request.username,
         first_name=request.first_name,
         last_name=request.last_name,
         phone_number=request.phone_number
     )
-    user_dto = use_case.execute(dto)
-    return {"message": "User successfully registered", "user_id": user_dto.id}
+    user_id = handler.execute(command)
+    return {"message": "User successfully registered", "user_id": user_id}
 
 @router.post("/login", response_model=TokenResponse)
 def login(
     request: AuthLoginRequest,
-    use_case: LoginUserUseCase = Depends(get_login_use_case)
+    handler: LoginHandler = Depends(get_login_handler)
 ):
-    dto = LoginUserDTO(email=request.email, password=request.password)
-    token = use_case.execute(dto)
+    query = LoginQuery(email=request.email, password=request.password)
+    token = handler.execute(query)
     return TokenResponse(access_token=token)

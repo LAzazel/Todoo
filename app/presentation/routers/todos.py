@@ -2,20 +2,21 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 from typing import List
 
-from app.application.dto.todo_dto import CreateTodoDTO, UpdateTodoDTO, TodoResponseDTO
-from app.application.use_cases.todos.create import CreateTodoUseCase
-from app.application.use_cases.todos.get import GetAllUserTodosUseCase, GetTodoUseCase
-from app.application.use_cases.todos.update import UpdateTodoUseCase
-from app.application.use_cases.todos.delete import DeleteTodoUseCase
-from app.application.use_cases.todos.status import ChangeTodoStatusUseCase
+from app.application.commands.todos.create_todo import CreateTodoCommand, CreateTodoHandler
+from app.application.commands.todos.update_todo import UpdateTodoCommand, UpdateTodoHandler
+from app.application.commands.todos.delete_todo import DeleteTodoCommand, DeleteTodoHandler
+from app.application.commands.todos.change_status import ChangeTodoStatusCommand, ChangeTodoStatusHandler
+
+from app.application.queries.todos.get_todo import GetTodoQuery, GetTodoHandler
+from app.application.queries.todos.get_all_todos import GetAllTodosQuery, GetAllTodosHandler
 
 from app.presentation.dependencies import (
-    get_create_todo_use_case, 
-    get_all_user_todos_use_case,
-    get_todo_use_case,
-    get_update_todo_use_case,
-    get_delete_todo_use_case,
-    get_change_todo_status_use_case,
+    get_create_todo_handler, 
+    get_all_todos_handler,
+    get_todo_handler,
+    get_update_todo_handler,
+    get_delete_todo_handler,
+    get_change_status_handler,
     get_current_user_id
 )
 
@@ -47,50 +48,54 @@ class TodoResponse(BaseModel):
 @router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
 def create_todo(
     request: TodoCreateRequest,
-    use_case: CreateTodoUseCase = Depends(get_create_todo_use_case),
+    handler: CreateTodoHandler = Depends(get_create_todo_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    dto = CreateTodoDTO(title=request.title, description=request.description, priority=request.priority)
-    return use_case.execute(dto, owner_id)
+    command = CreateTodoCommand(title=request.title, description=request.description, priority=request.priority)
+    return handler.execute(command, owner_id)
 
 @router.get("/", response_model=List[TodoResponse])
 def get_todos(
-    use_case: GetAllUserTodosUseCase = Depends(get_all_user_todos_use_case),
+    handler: GetAllTodosHandler = Depends(get_all_todos_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    return use_case.execute(owner_id)
+    query = GetAllTodosQuery(owner_id=owner_id)
+    return handler.execute(query)
 
 @router.get("/{todo_id}", response_model=TodoResponse)
 def get_todo(
     todo_id: int,
-    use_case: GetTodoUseCase = Depends(get_todo_use_case),
+    handler: GetTodoHandler = Depends(get_todo_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    return use_case.execute(todo_id, owner_id)
+    query = GetTodoQuery(todo_id=todo_id, owner_id=owner_id)
+    return handler.execute(query)
 
 @router.put("/{todo_id}", response_model=TodoResponse)
 def update_todo(
     todo_id: int,
     request: TodoUpdateRequest,
-    use_case: UpdateTodoUseCase = Depends(get_update_todo_use_case),
+    handler: UpdateTodoHandler = Depends(get_update_todo_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    dto = UpdateTodoDTO(title=request.title, description=request.description, priority=request.priority)
-    return use_case.execute(todo_id, dto, owner_id=owner_id)
+    command = UpdateTodoCommand(title=request.title, description=request.description, priority=request.priority)
+    handler.execute(todo_id, command, owner_id=owner_id)
 
 @router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_todo(
     todo_id: int,
-    use_case: DeleteTodoUseCase = Depends(get_delete_todo_use_case),
+    handler: DeleteTodoHandler = Depends(get_delete_todo_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    use_case.execute(todo_id, owner_id)
+    command = DeleteTodoCommand(todo_id=todo_id, owner_id=owner_id)
+    handler.execute(command)
 
 @router.patch("/{todo_id}/status", status_code=status.HTTP_204_NO_CONTENT)
 def change_todo_status(
     todo_id: int,
     complete: bool,
-    use_case: ChangeTodoStatusUseCase = Depends(get_change_todo_status_use_case),
+    handler: ChangeTodoStatusHandler = Depends(get_change_status_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    use_case.execute(todo_id=todo_id, owner_id=owner_id, complete=complete)
+    command = ChangeTodoStatusCommand(todo_id=todo_id, owner_id=owner_id, complete=complete)
+    handler.execute(command)

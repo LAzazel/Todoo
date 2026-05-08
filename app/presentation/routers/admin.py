@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, status
 from typing import List
 from pydantic import BaseModel
 
-from app.application.use_cases.admin.get_all import AdminGetAllUsersUseCase
-from app.application.use_cases.admin.delete_user import AdminDeleteUserUseCase
+from app.application.commands.admin.delete_user import DeleteUserCommand, DeleteUserHandler
+from app.application.queries.admin.get_all_users import GetAllUsersQuery, GetAllUsersHandler
+
 from app.presentation.dependencies import (
-    get_admin_get_all_use_case, 
-    get_admin_delete_use_case,
+    get_admin_get_all_handler, 
+    get_admin_delete_user_handler,
     get_current_user_role
 )
 
@@ -23,15 +24,17 @@ class UserResponse(BaseModel):
 
 @router.get("/users", response_model=List[UserResponse])
 def get_users(
-    use_case: AdminGetAllUsersUseCase = Depends(get_admin_get_all_use_case),
+    handler: GetAllUsersHandler = Depends(get_admin_get_all_handler),
     admin_role: str = Depends(get_current_user_role)
 ):
-    return use_case.execute(admin_role)
+    query = GetAllUsersQuery(admin_role=admin_role)
+    return handler.execute(query)
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: int,
-    use_case: AdminDeleteUserUseCase = Depends(get_admin_delete_use_case),
+    handler: DeleteUserHandler = Depends(get_admin_delete_user_handler),
     admin_role: str = Depends(get_current_user_role)
 ):
-    use_case.execute(user_id, admin_role)
+    command = DeleteUserCommand(user_id=user_id, admin_role=admin_role)
+    handler.execute(command)
