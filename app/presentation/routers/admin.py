@@ -36,5 +36,5 @@ def delete_user(
     handler: DeleteUserHandler = Depends(get_admin_delete_user_handler),
     admin_role: str = Depends(get_current_user_role)
 ):
-    command = DeleteUserCommand(user_id=user_id, admin_role=admin_role)
+    command = DeleteUserCommand(target_user_id=user_id, admin_role=admin_role)
     handler.execute(command)

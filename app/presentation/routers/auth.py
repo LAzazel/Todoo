@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
-from app.application.commands.users import RegisterUserCommand, RegisterUserHandler
-from app.application.queries.auth import LoginQuery, LoginHandler
+from app.application.commands.users.register_user import RegisterUserCommand, RegisterUserHandler
+from app.application.queries.auth.login import LoginQuery, LoginHandler
 from app.presentation.dependencies import get_register_handler, get_login_handler
 
 router = APIRouter(

@@ -45,14 +45,14 @@ class TodoResponse(BaseModel):
     owner_id: int
     complete: bool
 
-@router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create_todo(
     request: TodoCreateRequest,
     handler: CreateTodoHandler = Depends(get_create_todo_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    command = CreateTodoCommand(title=request.title, description=request.description, priority=request.priority)
-    return handler.execute(command, owner_id)
+    command = CreateTodoCommand(title=request.title, description=request.description, priority=request.priority, owner_id=owner_id)
+    return {"todo_id": handler.execute(command)}
 
 @router.get("/", response_model=List[TodoResponse])
 def get_todos(
@@ -78,8 +78,8 @@ def update_todo(
     handler: UpdateTodoHandler = Depends(get_update_todo_handler),
     owner_id: int = Depends(get_current_user_id)
 ):
-    command = UpdateTodoCommand(title=request.title, description=request.description, priority=request.priority)
-    handler.execute(todo_id, command, owner_id=owner_id)
+    command = UpdateTodoCommand(todo_id=todo_id, title=request.title, description=request.description, priority=request.priority, owner_id=owner_id)
+    handler.execute(command)
 
 @router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_todo(

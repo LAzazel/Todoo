@@ -58,5 +58,5 @@ def change_phone_number(
     user_id: int = Depends(get_current_user_id),
     handler: ChangePhoneHandler = Depends(get_change_phone_handler)
 ):
-    command = ChangePhoneCommand(user_id=user_id, new_phone_number=request.new_phone_number)
+    command = ChangePhoneCommand(user_id=user_id, new_phone=request.new_phone_number)
     handler.execute(command)

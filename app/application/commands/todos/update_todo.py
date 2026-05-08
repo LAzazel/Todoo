@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from app.domain.errors import TodoNotFoundError
 from app.domain.repositories.todo_repo import ITodoRepository
-from app.domain.value_objects import Priority
+from app.domain.value_objects.priority import Priority
 
 
 

@@ -21,7 +21,7 @@ def test_create_todo_success(integration_client):
     response = integration_client.post("/todos/", json=TODO_PAYLOAD, headers=headers)
 
     assert response.status_code == 201
-    assert response.json()["title"] == TODO_PAYLOAD["title"]
+    assert "todo_id" in response.json()
 
 def test_get_todos_unauthenticated(integration_client):
     response = integration_client.get("/todos/")
