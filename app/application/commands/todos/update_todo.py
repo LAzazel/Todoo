@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from app.domain.errors import TodoNotFoundError
 from app.domain.repositories.todo_repo import ITodoRepository
 from app.domain.value_objects.priority import Priority
+from app.infrastructure.event_bus.interfaces import IEventBus
+from app.application.events.todo_events import TodoUpdated
 
 
 
@@ -14,8 +16,9 @@ class UpdateTodoCommand:
     owner_id: int
 
 class UpdateTodoHandler:
-    def __init__(self, todo_repo: ITodoRepository):
+    def __init__(self, todo_repo: ITodoRepository, event_bus: IEventBus):
         self.todo_repo = todo_repo
+        self.event_bus = event_bus
 
     def execute(self, command: UpdateTodoCommand) -> None:
         todo = self.todo_repo.get_by_id(command.todo_id)
@@ -26,3 +29,10 @@ class UpdateTodoHandler:
         todo.update_details(title=command.title, description=command.description, priority=new_priority)
         
         self.todo_repo.update(todo)
+
+        self.event_bus.publish(TodoUpdated(
+            todo_id=command.todo_id,
+            owner_id=command.owner_id,
+            new_title=command.title,
+            new_priority=command.priority
+        ))

@@ -15,6 +15,12 @@ class UserPasswordChanged(DomainEvent):
 
 
 @dataclass(frozen=True)
+class UserPhoneChanged(DomainEvent):
+    user_id: int
+    new_phone: str
+
+
+@dataclass(frozen=True)
 class UserDeleted(DomainEvent):
     user_id: int
     username: str
