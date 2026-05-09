@@ -5,10 +5,12 @@ from fastapi.security import OAuth2PasswordBearer
 from app.application.interfaces.auth_services import ITokenService
 from app.domain.errors import InvalidCredentialsError
 
+from app.infrastructure.audit.audit_service import InMemoryAuditService
 from app.infrastructure.database import get_db
 from app.infrastructure.repositories.user_repo import SQLAlchemyUserRepository
 from app.infrastructure.repositories.todo_repo import SQLAlchemyTodoRepository
 from app.infrastructure.auth.jwt_service import PasslibPasswordHasher, JoseTokenService
+from app.infrastructure.audit.interfaces import IAuditService
 
 from app.domain.factories.user_factory import UserFactory
 from app.domain.factories.todo_factory import TodoFactory
@@ -32,6 +34,8 @@ from app.config import SECRET_KEY, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
+_audit_service = InMemoryAuditService()
+
 
 def get_user_repo(db: Session = Depends(get_db)):
     return SQLAlchemyUserRepository(db)
@@ -45,6 +49,9 @@ def get_password_hasher():
 def get_token_service():
     return JoseTokenService()
 
+def get_audit_service() -> IAuditService:
+    return _audit_service
+
 
 def get_user_factory(user_repo = Depends(get_user_repo)):
     return UserFactory(user_repo)
@@ -53,15 +60,15 @@ def get_todo_factory():
     return TodoFactory()
 
 
-def get_register_handler(user_repo=Depends(get_user_repo), factory=Depends(get_user_factory), hasher=Depends(get_password_hasher)):
-    return RegisterUserHandler(user_repo, factory, hasher)
+def get_register_handler(user_repo=Depends(get_user_repo), factory=Depends(get_user_factory), hasher=Depends(get_password_hasher), audit_service=Depends(get_audit_service)):
+    return RegisterUserHandler(user_repo, factory, hasher, audit_service)
 
-def get_create_todo_handler(repo=Depends(get_todo_repo), factory=Depends(get_todo_factory)):
-    return CreateTodoHandler(repo, factory)
+def get_create_todo_handler(repo=Depends(get_todo_repo), factory=Depends(get_todo_factory), audit_service=Depends(get_audit_service)):
+    return CreateTodoHandler(repo, factory, audit_service)
 
 def get_update_todo_handler(repo=Depends(get_todo_repo)): return UpdateTodoHandler(repo)
-def get_delete_todo_handler(repo=Depends(get_todo_repo)): return DeleteTodoHandler(repo)
-def get_change_status_handler(repo=Depends(get_todo_repo)): return ChangeTodoStatusHandler(repo)
+def get_delete_todo_handler(repo=Depends(get_todo_repo), audit_service=Depends(get_audit_service)): return DeleteTodoHandler(repo, audit_service)
+def get_change_status_handler(repo=Depends(get_todo_repo), audit_service=Depends(get_audit_service)): return ChangeTodoStatusHandler(repo, audit_service)
 
 def get_change_password_handler(repo=Depends(get_user_repo), hasher=Depends(get_password_hasher)):
     return ChangePasswordHandler(repo, hasher)
