@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from app.application.events.base import DomainEvent
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TodoCreated(DomainEvent):
     todo_id: int
     owner_id: int
@@ -11,21 +11,21 @@ class TodoCreated(DomainEvent):
     priority: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TodoDeleted(DomainEvent):
     todo_id: int
     owner_id: int
     title: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TodoStatusChanged(DomainEvent):
     todo_id: int
     owner_id: int
     complete: bool
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TodoUpdated(DomainEvent):
     todo_id: int
     owner_id: int
