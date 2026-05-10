@@ -31,19 +31,19 @@ Todoo/
 │   │   │   └── todo_factory.py        # Створення Todo з перевіркою інваріантів
 │   │   └── errors.py                  # Доменні помилки (без HTTP)
 │   │
-│   ├── application/                   # CQS: команди і запити окремо
-│   │   ├── commands/                  # Змінюють стан, не повертають дані
+│   ├── application/
+│   │   ├── commands/                      # Змінюють стан, не повертають дані
 │   │   │   ├── todos/
-│   │   │   │   ├── create_todo.py     # CreateTodoCommand + Handler → повертає ID
-│   │   │   │   ├── update_todo.py     # UpdateTodoCommand + Handler → None
-│   │   │   │   ├── delete_todo.py     # DeleteTodoCommand + Handler → None
-│   │   │   │   └── change_status.py   # ChangeTodoStatusCommand + Handler → None
+│   │   │   │   ├── create_todo.py         # sync: audit напряму
+│   │   │   │   ├── delete_todo.py         # sync: audit напряму
+│   │   │   │   ├── change_status.py       # sync: audit напряму
+│   │   │   │   └── update_todo.py         # async: publish TodoUpdated
 │   │   │   ├── users/
-│   │   │   │   ├── register_user.py   # RegisterUserCommand + Handler → повертає ID
-│   │   │   │   ├── change_password.py # ChangePasswordCommand + Handler → None
-│   │   │   │   └── change_phone.py    # ChangePhoneCommand + Handler → None
+│   │   │   │   ├── register_user.py       # sync: audit напряму
+│   │   │   │   ├── change_password.py     # async: publish UserPasswordChanged
+│   │   │   │   └── change_phone.py        # async: publish UserPhoneChanged
 │   │   │   └── admin/
-│   │   │       └── delete_user.py     # DeleteUserCommand + Handler → None
+│   │   │       └── delete_user.py         # async: publish UserDeleted
 │   │   │
 │   │   ├── queries/                   # Читають стан, повертають Read Models
 │   │   │   ├── todos/
@@ -55,6 +55,11 @@ Todoo/
 │   │   │   │   └── get_all_users.py   # GetAllUsersQuery + Handler → List[UserReadModel]
 │   │   │   └── auth/
 │   │   │       └── login.py           # LoginQuery + Handler → JWT token
+│   │   │
+│   │   ├── events/                        # Доменні події (frozen dataclasses)
+│   │   │   ├── base.py                    # DomainEvent
+│   │   │   ├── todo_events.py             # TodoUpdated
+│   │   │   └── user_events.py             # UserPasswordChanged, UserPhoneChanged, UserDeleted
 │   │   │
 │   │   ├── read_models/               # DTO оптимізовані під відповідь клієнту
 │   │   │   ├── todo_read_model.py     # TodoReadModel (frozen dataclass)
@@ -74,6 +79,14 @@ Todoo/
 │   │   │   └── todo_mapper.py         # TodoORM ↔ Todo
 │   │   ├── auth/
 │   │   │   └── jwt_service.py         # PasslibPasswordHasher, JoseTokenService
+│   │   ├── audit/                         # Допоміжний компонент
+│   │   │   ├── audit_log.py               # AuditLog dataclass
+│   │   │   ├── interfaces.py              # IAuditService (ABC)
+│   │   │   ├── audit_service.py           # InMemoryAuditService
+│   │   │   └── subscribers.py             # Підписники для async варіанту
+│   │   └── event_bus/
+│   │   │   ├── interfaces.py              # IEventBus (ABC)
+│   │   │   └── in_memory_bus.py           # InMemoryEventBus
 │   │   └── database.py                # SQLAlchemy engine, session, get_db
 │   │
 │   ├── presentation/                  # HTTP шар. Залежить від application
@@ -95,7 +108,8 @@ Todoo/
 │   │   │   ├── test_models.py         # User, Todo — поведінка та інваріанти
 │   │   │   └── test_factories.py      # UserFactory, TodoFactory
 │   │   └── application/
-│   │       └── test_commands.py       # Command Handlers без БД
+│   │       ├── test_commands.py       # Command Handlers без БД
+│   │       └── test_communication.py  # TestSyncAsyncCommunication
 │   └── integration/
 │       └── test_api.py                # HTTP → реальна тестова БД
 │
@@ -103,7 +117,8 @@ Todoo/
 │   ├── use-cases.md
 │   └── analysis/
 │       ├── lab2.md
-│       └── lab3.md
+│       ├── lab3.md
+│       └── lab4.md
 │
 ├── .env.example
 ├── .gitignore
@@ -117,6 +132,17 @@ Todoo/
 ```
 Presentation → Commands/Queries → Domain ← Infrastructure
 ```
+
+## Архітектура комунікації
+ 
+```
+Sync:  Handler -> IAuditService.log()
+Async: Handler -> IEventBus.publish(Event) -> Subscriber -> IAuditService.log()
+```
+ 
+**Sync хендлери** (create, delete, change_status, register): викликають аудит напряму, збій аудиту ігнорується через `try/except`.
+ 
+**Async хендлери** (update, change_password, change_phone, delete_user): публікують подію і одразу повертають результат, підписники обробляють незалежно.
 
 ## Запуск
 
@@ -170,21 +196,22 @@ uvicorn app.main:app --reload
 
 ## API
  
-| Метод | Ендпоінт | Тип | Авторизація |
-|---|---|---|---|
-| POST | `/auth/register` | Command | — |
-| POST | `/auth/login` | Query | — |
-| GET | `/todos/` | Query | ✅ |
-| POST | `/todos/` | Command | ✅ |
-| GET | `/todos/{id}` | Query | ✅ |
-| PUT | `/todos/{id}` | Command | ✅ |
-| DELETE | `/todos/{id}` | Command | ✅ |
-| PATCH | `/todos/{id}/status` | Command | ✅ |
-| GET | `/user/` | Query | ✅ |
-| PUT | `/user/change_password` | Command | ✅ |
-| PUT | `/user/change_phone_number` | Command | ✅ |
-| GET | `/admin/users` | Query | ✅ admin |
-| DELETE | `/admin/users/{id}` | Command | ✅ admin |
+| Метод | Ендпоінт | Тип | Комунікація | Авторизація |
+|---|---|---|---|---|
+| POST | `/auth/register` | Command | sync | — |
+| POST | `/auth/login` | Query | — | — |
+| GET | `/todos/` | Query | — | ✅ |
+| POST | `/todos/` | Command | sync | ✅ |
+| GET | `/todos/{id}` | Query | — | ✅ |
+| PUT | `/todos/{id}` | Command | async | ✅ |
+| DELETE | `/todos/{id}` | Command | sync | ✅ |
+| PATCH | `/todos/{id}/status` | Command | sync | ✅ |
+| GET | `/user/` | Query | — | ✅ |
+| PUT | `/user/change_password` | Command | async | ✅ |
+| PUT | `/user/change_phone_number` | Command | async | ✅ |
+| GET | `/admin/users` | Query | — | ✅ admin |
+| DELETE | `/admin/users/{id}` | Command | async | ✅ admin |
+
 
 ## Тестування
  
@@ -196,6 +223,11 @@ pytest
  
 ```bash
 pytest tests/unit/ -v
+```
+
+Тести комунікації sync/async:
+```bash
+pytest tests/unit/application/test_communication.py -v
 ```
  
 Тільки інтеграційні тести:
