@@ -19,4 +19,4 @@ class TodoCompletedIntegrationEvent(IntegrationEvent):
 @dataclass(kw_only=True)
 class UserRegisteredIntegrationEvent(IntegrationEvent):
     user_id: int
-    username: str
+    email: str

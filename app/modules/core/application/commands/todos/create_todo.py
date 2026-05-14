@@ -43,7 +43,7 @@ class CreateTodoHandler:
         integration_event = TodoCreatedIntegrationEvent(
             todo_id=todo.id,
             owner_id=todo.owner_id,
-            priority=todo.priority
+            priority=todo.priority.value
         )
         self.event_bus.publish(integration_event)
 
