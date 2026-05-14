@@ -4,6 +4,7 @@ from app.modules.core.domain.repositories.user_repo import IUserRepository
 from app.modules.core.application.interfaces.auth_services import IPasswordHasher
 from app.modules.core.infrastructure.audit.audit_log import AuditLog
 from app.modules.core.infrastructure.audit.interfaces import IAuditService
+from app.modules.core.integration_events import UserRegisteredIntegrationEvent
 
 
 @dataclass(frozen=True)
@@ -16,11 +17,12 @@ class RegisterUserCommand:
     phone_number: str
 
 class RegisterUserHandler:
-    def __init__(self, user_repo: IUserRepository, user_factory: UserFactory, password_hasher: IPasswordHasher, audit_service: IAuditService):
+    def __init__(self, user_repo: IUserRepository, user_factory: UserFactory, password_hasher: IPasswordHasher, audit_service: IAuditService, event_bus):
         self.user_repo = user_repo
         self.user_factory = user_factory
         self.password_hasher = password_hasher
         self.audit_service = audit_service
+        self.event_bus = event_bus
 
     def execute(self, command: RegisterUserCommand) -> int:
         hashed_password = self.password_hasher.hash(command.password)
@@ -44,5 +46,11 @@ class RegisterUserHandler:
             ))
         except Exception:
             pass
+
+        integration_event = UserRegisteredIntegrationEvent(
+            user_id=user.id,
+            email=user.email
+        )
+        self.event_bus.publish(integration_event)
         
         return user.id
