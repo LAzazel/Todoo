@@ -119,7 +119,8 @@ def make_user(user_id: int = 1) -> User:
 class TestSyncCommunication:
     def test_create_todo_logs_to_audit(self):
         audit = InMemoryAuditService()
-        handler = CreateTodoHandler(FakeTodoRepository(), TodoFactory(), audit)
+        event_bus_mock = MagicMock()
+        handler = CreateTodoHandler(FakeTodoRepository(), TodoFactory(), audit, event_bus_mock)
         handler.execute(CreateTodoCommand(
             title="Buy milk", description="desc", priority=3, owner_id=1
         ))
@@ -132,8 +133,9 @@ class TestSyncCommunication:
     def test_create_todo_audit_failure_does_not_break_operation(self):
         broken_audit = MagicMock()
         broken_audit.log.side_effect = Exception("audit is down")
+        event_bus_mock = MagicMock()
         repo = FakeTodoRepository()
-        handler = CreateTodoHandler(repo, TodoFactory(), broken_audit)
+        handler = CreateTodoHandler(repo, TodoFactory(), broken_audit, event_bus_mock)
         result = handler.execute(CreateTodoCommand(
             title="Test", description="desc", priority=1, owner_id=1
         ))

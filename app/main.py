@@ -15,7 +15,8 @@ from app.modules.core.public_contract import TodoCreatedIntegrationEvent, TodoCo
 
 from app.modules.analytics.infrastructure.acl import AnalyticsACL
 from app.modules.analytics.application.handlers import AnalyticsHandlers
-from app.modules.analytics.presentation.routers import router as analytics_router, global_stats_db
+from app.modules.analytics.presentation.routers import router as analytics_router
+from app.modules.analytics.public_contract import get_stats_store
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,7 +24,7 @@ app = FastAPI(title="Todoo API", description="A simple To-Do application with la
 
 app.add_exception_handler(errors.DomainError, domain_error_exception_handler)
 
-analytics_handlers = AnalyticsHandlers(global_stats_db)
+analytics_handlers = AnalyticsHandlers(get_stats_store())
 analytics_acl = AnalyticsACL(analytics_handlers)
 
 _event_bus.subscribe(TodoUpdated, on_todo_updated(_audit_service))

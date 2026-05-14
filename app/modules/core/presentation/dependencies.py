@@ -69,15 +69,15 @@ def get_todo_factory():
     return TodoFactory()
 
 
-def get_register_handler(user_repo=Depends(get_user_repo), factory=Depends(get_user_factory), hasher=Depends(get_password_hasher), audit_service=Depends(get_audit_service)):
-    return RegisterUserHandler(user_repo, factory, hasher, audit_service)
+def get_register_handler(user_repo=Depends(get_user_repo), factory=Depends(get_user_factory), hasher=Depends(get_password_hasher), audit_service=Depends(get_audit_service), event_bus=Depends(get_event_bus)):
+    return RegisterUserHandler(user_repo, factory, hasher, audit_service, event_bus)
 
 def get_create_todo_handler(repo=Depends(get_todo_repo), factory=Depends(get_todo_factory), audit_service=Depends(get_audit_service), event_bus=Depends(get_event_bus)):
     return CreateTodoHandler(repo, factory, audit_service, event_bus)
 
 def get_update_todo_handler(repo=Depends(get_todo_repo), event_bus=Depends(get_event_bus)): return UpdateTodoHandler(repo, event_bus)
 def get_delete_todo_handler(repo=Depends(get_todo_repo), audit_service=Depends(get_audit_service)): return DeleteTodoHandler(repo, audit_service)
-def get_change_status_handler(repo=Depends(get_todo_repo), audit_service=Depends(get_audit_service)): return ChangeTodoStatusHandler(repo, audit_service)
+def get_change_status_handler(repo=Depends(get_todo_repo), audit_service=Depends(get_audit_service), event_bus=Depends(get_event_bus)): return ChangeTodoStatusHandler(repo, audit_service, event_bus)
 
 def get_change_password_handler(repo=Depends(get_user_repo), hasher=Depends(get_password_hasher), event_bus=Depends(get_event_bus)):
     return ChangePasswordHandler(repo, hasher, event_bus)
