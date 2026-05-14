@@ -3,6 +3,8 @@ from app.modules.core.domain.errors import TodoNotFoundError
 from app.modules.core.domain.repositories.todo_repo import ITodoRepository
 from app.modules.core.infrastructure.audit.audit_log import AuditLog
 from app.modules.core.infrastructure.audit.interfaces import IAuditService
+from app.modules.core.infrastructure.event_bus.interfaces import IEventBus
+from app.modules.core.integration_events import TodoCompletedIntegrationEvent
 
 
 @dataclass(frozen=True)
@@ -12,9 +14,10 @@ class ChangeTodoStatusCommand:
     complete: bool
 
 class ChangeTodoStatusHandler:
-    def __init__(self, todo_repo: ITodoRepository, audit_service: IAuditService):
+    def __init__(self, todo_repo: ITodoRepository, audit_service: IAuditService, event_bus: IEventBus):
         self.todo_repo = todo_repo
         self.audit_service = audit_service
+        self.event_bus = event_bus
 
     def execute(self, command: ChangeTodoStatusCommand) -> None:
         todo = self.todo_repo.get_by_id(command.todo_id)
@@ -23,6 +26,12 @@ class ChangeTodoStatusHandler:
 
         if command.complete:
             todo.mark_as_completed()
+
+            integration_event = TodoCompletedIntegrationEvent(
+                todo_id=todo.id,
+                owner_id=todo.owner_id
+            )
+            self.event_bus.publish(integration_event)
         else:
             todo.mark_as_incomplete()
             
