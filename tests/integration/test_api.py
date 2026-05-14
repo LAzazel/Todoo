@@ -1,5 +1,5 @@
 from tests.conftest import USER_PAYLOAD, ADMIN_PAYLOAD, TODO_PAYLOAD, register, auth_headers
-from app.infrastructure.orm.models import UserORM
+from app.modules.core.infrastructure.orm.models import UserORM
 
 
 def test_register_and_login_success(integration_client):

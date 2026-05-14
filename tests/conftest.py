@@ -6,10 +6,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
-from app.infrastructure.database import Base
-from app.presentation.dependencies import get_db
+from app.modules.core.infrastructure.database import Base
+from app.modules.core.presentation.dependencies import get_db
 
-from app.infrastructure.orm.models import UserORM, TodoORM
+from app.modules.core.infrastructure.orm.models import UserORM, TodoORM
 
 SQLITE_TEST_URL = "sqlite:///:memory:"
 

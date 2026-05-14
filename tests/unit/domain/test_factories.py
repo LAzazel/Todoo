@@ -1,10 +1,10 @@
 import pytest
 from unittest.mock import MagicMock
-from app.domain.factories.user_factory import UserFactory
-from app.domain.factories.todo_factory import TodoFactory
-from app.domain.repositories.user_repo import IUserRepository
-from app.domain.errors import UserAlreadyExistsError, DomainValidationError
-from app.domain.value_objects.priority import Priority
+from app.modules.core.domain.factories.user_factory import UserFactory
+from app.modules.core.domain.factories.todo_factory import TodoFactory
+from app.modules.core.domain.repositories.user_repo import IUserRepository
+from app.modules.core.domain.errors import UserAlreadyExistsError, DomainValidationError
+from app.modules.core.domain.value_objects.priority import Priority
 
 class TestDomainFactories:
     def test_create_user_success(self):

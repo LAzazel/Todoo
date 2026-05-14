@@ -1,15 +1,16 @@
 from fastapi import FastAPI
-from app.infrastructure.database import engine, Base
+from app.modules.core.infrastructure.database import engine, Base
 
-from app.presentation.routers import auth, todos, users, admin
+from app.modules.core.presentation.routers import admin, auth, todos
+from app.modules.core.presentation.routers import users
 
-from app.domain import errors
-from app.presentation.error_handler import domain_error_exception_handler
+from app.modules.core.domain import errors
+from app.modules.core.presentation.error_handler import domain_error_exception_handler
 
-from app.application.events.user_events import UserPhoneChanged, UserPasswordChanged, UserDeleted
-from app.application.events.todo_events import TodoUpdated
-from app.infrastructure.audit.subscribers import on_user_phone_changed, on_user_password_changed, on_user_deleted, on_todo_updated
-from app.presentation.dependencies import _audit_service, _event_bus
+from app.modules.core.application.events.user_events import UserPhoneChanged, UserPasswordChanged, UserDeleted
+from app.modules.core.application.events.todo_events import TodoUpdated
+from app.modules.core.infrastructure.audit.subscribers import on_user_phone_changed, on_user_password_changed, on_user_deleted, on_todo_updated
+from app.modules.core.presentation.dependencies import _audit_service, _event_bus
 
 Base.metadata.create_all(bind=engine)
 

@@ -3,40 +3,40 @@ from dataclasses import dataclass, field
 from typing import Optional
 from unittest.mock import MagicMock
 
-from app.domain.models.todo import Todo
-from app.domain.models.user import User
-from app.domain.value_objects.email import Email
-from app.domain.value_objects.priority import Priority
-from app.domain.repositories.todo_repo import ITodoRepository
-from app.domain.repositories.user_repo import IUserRepository
-from app.domain.factories.todo_factory import TodoFactory
-from app.domain.factories.user_factory import UserFactory
-from app.domain.errors import TodoNotFoundError, UserNotFoundError
+from app.modules.core.domain.models.todo import Todo
+from app.modules.core.domain.models.user import User
+from app.modules.core.domain.value_objects.email import Email
+from app.modules.core.domain.value_objects.priority import Priority
+from app.modules.core.domain.repositories.todo_repo import ITodoRepository
+from app.modules.core.domain.repositories.user_repo import IUserRepository
+from app.modules.core.domain.factories.todo_factory import TodoFactory
+from app.modules.core.domain.factories.user_factory import UserFactory
+from app.modules.core.domain.errors import TodoNotFoundError, UserNotFoundError
 
-from app.infrastructure.audit.audit_service import InMemoryAuditService
-from app.infrastructure.audit.audit_log import AuditLog
-from app.infrastructure.event_bus.in_memory_bus import InMemoryEventBus
+from app.modules.core.infrastructure.audit.audit_service import InMemoryAuditService
+from app.modules.core.infrastructure.audit.audit_log import AuditLog
+from app.modules.core.infrastructure.event_bus.in_memory_bus import InMemoryEventBus
 
-from app.application.events.todo_events import TodoUpdated
-from app.application.events.user_events import (
+from app.modules.core.application.events.todo_events import TodoUpdated
+from app.modules.core.application.events.user_events import (
     UserPasswordChanged,
     UserPhoneChanged,
     UserDeleted,
 )
-from app.infrastructure.audit.subscribers import (
+from app.modules.core.infrastructure.audit.subscribers import (
     on_todo_updated,
     on_user_password_changed,
     on_user_phone_changed,
     on_user_deleted,
 )
 
-from app.application.commands.todos.create_todo import CreateTodoCommand, CreateTodoHandler
-from app.application.commands.todos.delete_todo import DeleteTodoCommand, DeleteTodoHandler
-from app.application.commands.todos.change_status import ChangeTodoStatusCommand, ChangeTodoStatusHandler
-from app.application.commands.todos.update_todo import UpdateTodoCommand, UpdateTodoHandler
-from app.application.commands.users.change_password import ChangePasswordCommand, ChangePasswordHandler
-from app.application.commands.users.change_phone import ChangePhoneCommand, ChangePhoneHandler
-from app.application.commands.admin.delete_user import DeleteUserCommand, DeleteUserHandler
+from app.modules.core.application.commands.todos.create_todo import CreateTodoCommand, CreateTodoHandler
+from app.modules.core.application.commands.todos.delete_todo import DeleteTodoCommand, DeleteTodoHandler
+from app.modules.core.application.commands.todos.change_status import ChangeTodoStatusCommand, ChangeTodoStatusHandler
+from app.modules.core.application.commands.todos.update_todo import UpdateTodoCommand, UpdateTodoHandler
+from app.modules.core.application.commands.users.change_password import ChangePasswordCommand, ChangePasswordHandler
+from app.modules.core.application.commands.users.change_phone import ChangePhoneCommand, ChangePhoneHandler
+from app.modules.core.application.commands.admin.delete_user import DeleteUserCommand, DeleteUserHandler
 
 
 class FakeTodoRepository(ITodoRepository):

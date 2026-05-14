@@ -1,7 +1,7 @@
 import pytest
-from app.domain.value_objects.email import Email
-from app.domain.value_objects.priority import Priority
-from app.domain.errors import DomainValidationError
+from app.modules.core.domain.value_objects.email import Email
+from app.modules.core.domain.value_objects.priority import Priority
+from app.modules.core.domain.errors import DomainValidationError
 
 class TestValueObjects:
     def test_valid_email(self):

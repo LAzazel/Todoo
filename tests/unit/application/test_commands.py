@@ -1,13 +1,13 @@
 import pytest
 from unittest.mock import MagicMock
 
-from app.application.commands.admin.delete_user import DeleteUserCommand, DeleteUserHandler
-from app.application.commands.users.register_user import RegisterUserCommand, RegisterUserHandler
-from app.application.commands.todos.create_todo import CreateTodoCommand, CreateTodoHandler
-from app.application.commands.todos.change_status import ChangeTodoStatusCommand, ChangeTodoStatusHandler
-from app.application.commands.users.change_phone import ChangePhoneCommand, ChangePhoneHandler
+from app.modules.core.application.commands.admin.delete_user import DeleteUserCommand, DeleteUserHandler
+from app.modules.core.application.commands.users.register_user import RegisterUserCommand, RegisterUserHandler
+from app.modules.core.application.commands.todos.create_todo import CreateTodoCommand, CreateTodoHandler
+from app.modules.core.application.commands.todos.change_status import ChangeTodoStatusCommand, ChangeTodoStatusHandler
+from app.modules.core.application.commands.users.change_phone import ChangePhoneCommand, ChangePhoneHandler
 
-from app.domain.errors import UserNotFoundError, InvalidCredentialsError, UnauthorizedAdminAccessError
+from app.modules.core.domain.errors import UserNotFoundError, InvalidCredentialsError, UnauthorizedAdminAccessError
 
 class TestCommands:
     def test_register_success(self):

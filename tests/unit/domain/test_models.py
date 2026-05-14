@@ -1,9 +1,9 @@
 import pytest
-from app.domain.models.todo import Todo
-from app.domain.models.user import User
-from app.domain.value_objects.email import Email
-from app.domain.value_objects.priority import Priority
-from app.domain.errors import DomainValidationError
+from app.modules.core.domain.models.todo import Todo
+from app.modules.core.domain.models.user import User
+from app.modules.core.domain.value_objects.email import Email
+from app.modules.core.domain.value_objects.priority import Priority
+from app.modules.core.domain.errors import DomainValidationError
 
 class TestDomainModels:
     def test_create_todo_success(self):
