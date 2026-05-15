@@ -3,7 +3,7 @@ from datetime import datetime
 
 @dataclass(kw_only=True)
 class IntegrationEvent:
-    occurred_on: datetime = field(default_factory=datetime.utcnow)
+    occurred_on: datetime = field(default_factory=datetime)
 
 @dataclass(kw_only=True)
 class TodoCreatedIntegrationEvent(IntegrationEvent):
